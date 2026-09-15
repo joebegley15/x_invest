@@ -5,7 +5,7 @@ import {
 
 export const showStatus = pgEnum("show_status", ["setup", "live", "audience", "complete"]);
 export const contestantStatus = pgEnum("contestant_status", ["waiting", "voting", "revealed"]);
-export const voteValue = pgEnum("vote_value", ["green", "red"]);
+export const voteValue = pgEnum("vote_value", ["neutral", "red", "yellow"]);
 export const roundKind = pgEnum("round_kind", ["audience_favorite", "overall_runoff"]);
 
 export const shows = pgTable("shows", {
@@ -14,7 +14,6 @@ export const shows = pgTable("shows", {
   slug: text("slug").notNull().unique(),
   showDate: timestamp("show_date", { withTimezone: true }),
   status: showStatus("status").notNull().default("setup"),
-  audienceBonusPoints: integer("audience_bonus_points").notNull().default(2),
   currentContestantId: integer("current_contestant_id")
     .references((): AnyPgColumn => contestants.id, { onDelete: "set null" }),
   audienceBonusContestantId: integer("audience_bonus_contestant_id")
@@ -27,11 +26,10 @@ export const shows = pgTable("shows", {
 export const judges = pgTable("judges", {
   id: serial("id").primaryKey(),
   showId: integer("show_id").notNull().references(() => shows.id, { onDelete: "cascade" }),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(), // stored lowercase for login matching
-  accessToken: text("access_token").notNull().unique(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [unique().on(t.showId, t.lastName)]);
+}, (t) => [unique().on(t.showId, t.slug)]);
 
 export const contestants = pgTable("contestants", {
   id: serial("id").primaryKey(),
@@ -47,15 +45,15 @@ export const judgeVotes = pgTable("judge_votes", {
   showId: integer("show_id").notNull().references(() => shows.id, { onDelete: "cascade" }),
   judgeId: integer("judge_id").notNull().references(() => judges.id, { onDelete: "cascade" }),
   contestantId: integer("contestant_id").notNull().references(() => contestants.id, { onDelete: "cascade" }),
-  value: voteValue("value").notNull(),
-  lockedAt: timestamp("locked_at", { withTimezone: true }).defaultNow().notNull(),
+  value: voteValue("value").notNull().default("neutral"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [unique().on(t.judgeId, t.contestantId)]);
 
 export const audienceRounds = pgTable("audience_rounds", {
   id: serial("id").primaryKey(),
   showId: integer("show_id").notNull().references(() => shows.id, { onDelete: "cascade" }),
   kind: roundKind("kind").notNull(),
-  roundNumber: integer("round_number").notNull(), // 1 = main vote, 2+ = runoffs
+  roundNumber: integer("round_number").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [unique().on(t.showId, t.kind, t.roundNumber)]);
 
@@ -64,7 +62,7 @@ export const audienceTallies = pgTable("audience_tallies", {
   roundId: integer("round_id").notNull().references(() => audienceRounds.id, { onDelete: "cascade" }),
   contestantId: integer("contestant_id").notNull().references(() => contestants.id, { onDelete: "cascade" }),
   section: text("section").notNull(),
-  counter: integer("counter").notNull(), // 1 or 2
+  counter: integer("counter").notNull(),
   votes: integer("votes").notNull(),
 }, (t) => [unique().on(t.roundId, t.contestantId, t.section, t.counter)]);
 
