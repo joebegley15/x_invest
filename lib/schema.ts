@@ -5,7 +5,7 @@ import {
 
 export const showStatus = pgEnum("show_status", ["setup", "live", "audience", "complete"]);
 export const contestantStatus = pgEnum("contestant_status", ["waiting", "voting", "revealed"]);
-export const voteValue = pgEnum("vote_value", ["neutral", "red", "yellow"]);
+export const voteValue = pgEnum("vote_value", ["neutral", "red", "green"]);
 
 export const shows = pgTable("shows", {
   id: serial("id").primaryKey(),

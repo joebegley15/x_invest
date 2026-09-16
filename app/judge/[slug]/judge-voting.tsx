@@ -27,7 +27,7 @@ export function JudgeVoting({ slug, initialState }: { slug: string; initialState
 
   const clickable = state.status === "voting";
 
-  function handleTap(tapped: "red" | "yellow") {
+  function handleTap(tapped: "red" | "green") {
     if (!clickable || state.phase !== "contestant") return;
     const { judgeId, contestantId } = state;
     startTransition(async () => {
@@ -62,14 +62,14 @@ export function JudgeVoting({ slug, initialState }: { slug: string; initialState
         </button>
         <button
           type="button"
-          onClick={() => handleTap("yellow")}
+          onClick={() => handleTap("green")}
           disabled={!clickable}
-          aria-pressed={state.vote === "yellow"}
-          className={`h-40 flex-1 rounded-2xl bg-yellow-400 text-2xl font-bold text-zinc-900 transition-opacity ${
-            state.vote === "yellow" ? "border-8 border-white" : "border-8 border-transparent"
+          aria-pressed={state.vote === "green"}
+          className={`h-40 flex-1 rounded-2xl bg-[#4fbf85] text-2xl font-bold text-white transition-opacity ${
+            state.vote === "green" ? "border-8 border-white" : "border-8 border-transparent"
           } ${clickable ? "" : "opacity-60"}`}
         >
-          YELLOW
+          GREEN
         </button>
       </div>
     </div>

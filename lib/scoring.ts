@@ -1,4 +1,4 @@
-export type VoteValue = "neutral" | "red" | "yellow";
+export type VoteValue = "neutral" | "red" | "green";
 
 export type JudgeVote = { contestantId: number; value: VoteValue };
 
@@ -17,7 +17,7 @@ export type ContestantScore = {
 export function judgePointsByContestant(votes: JudgeVote[]): Map<number, number> {
   const points = new Map<number, number>();
   for (const v of votes) {
-    if (v.value !== "yellow") continue;
+    if (v.value !== "green") continue;
     points.set(v.contestantId, (points.get(v.contestantId) ?? 0) + 1);
   }
   return points;

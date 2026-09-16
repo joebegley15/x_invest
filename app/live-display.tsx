@@ -5,10 +5,10 @@ import { fetchPublicState } from "./actions";
 import type { PublicState } from "@/lib/public-state";
 import { Scoreboard } from "./scoreboard";
 
-const colorClasses: Record<"neutral" | "red" | "yellow", string> = {
+const colorClasses: Record<"neutral" | "red" | "green", string> = {
   neutral: "border-zinc-700 bg-zinc-900",
   red: "border-red-600 bg-red-500",
-  yellow: "border-yellow-500 bg-yellow-400",
+  green: "border-[#4fbf85] bg-[#4fbf85]",
 };
 
 const audienceBonusClasses: Record<number, string> = {

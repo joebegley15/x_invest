@@ -16,7 +16,7 @@ export async function castVote(
   slug: string,
   judgeId: number,
   contestantId: number,
-  tapped: "red" | "yellow"
+  tapped: "red" | "green"
 ): Promise<JudgeState> {
   await requireJudge();
 
@@ -24,7 +24,7 @@ export async function castVote(
     !slug ||
     !Number.isInteger(judgeId) ||
     !Number.isInteger(contestantId) ||
-    (tapped !== "red" && tapped !== "yellow")
+    (tapped !== "red" && tapped !== "green")
   ) {
     throw new Error("Invalid vote request.");
   }

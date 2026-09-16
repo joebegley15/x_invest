@@ -32,7 +32,7 @@ export function RunControls({
   const [audienceState, audienceAction, audiencePending] = useActionState(moveToAudience, undefined);
 
   const voteByJudge = new Map(votes.map((v) => [v.judgeId, v.value]));
-  const points = votes.filter((v) => v.value === "yellow").length;
+  const points = votes.filter((v) => v.value === "green").length;
 
   return (
     <div className="mt-8 rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
