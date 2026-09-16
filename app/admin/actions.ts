@@ -27,3 +27,13 @@ export async function createShow(_prev: ActionState, formData: FormData): Promis
   const [show] = await db.insert(shows).values({ name, slug }).returning({ id: shows.id });
   redirect(`/admin/shows/${show.id}`);
 }
+
+export async function deleteShow(formData: FormData): Promise<void> {
+  await requireAdmin();
+
+  const id = Number(formData.get("id"));
+  if (!id) return;
+
+  await db.delete(shows).where(eq(shows.id, id));
+  redirect("/admin");
+}
