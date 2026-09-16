@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/access";
 import { db } from "@/lib/db";
 import { shows, judges, contestants } from "@/lib/schema";
-import { ShowNameForm, JudgesForm, ContestantsForm } from "./forms";
+import { ShowNameForm, StartShowForm, JudgesForm, ContestantsForm } from "./forms";
 
 export default async function ShowPage({
   params,
@@ -33,6 +34,17 @@ export default async function ShowPage({
       <p className="text-sm text-zinc-500">Status: {show.status}</p>
 
       <ShowNameForm showId={show.id} initialName={show.name} />
+
+      {isSetup ? (
+        <StartShowForm showId={show.id} />
+      ) : (
+        <Link
+          href={`/admin/shows/${show.id}/run`}
+          className="mt-4 inline-block text-blue-600 underline dark:text-blue-400"
+        >
+          Go to run screen
+        </Link>
+      )}
 
       <section className="mt-8">
         <h2 className="text-lg font-semibold">Judges</h2>

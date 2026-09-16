@@ -1,7 +1,25 @@
 "use client";
 
 import { useActionState } from "react";
-import { updateShowName, saveJudges, saveContestants } from "./actions";
+import { updateShowName, startShow, saveJudges, saveContestants } from "./actions";
+
+export function StartShowForm({ showId }: { showId: number }) {
+  const [state, formAction, pending] = useActionState(startShow, undefined);
+
+  return (
+    <form action={formAction} className="mt-4">
+      <input type="hidden" name="showId" value={showId} />
+      <button
+        type="submit"
+        disabled={pending}
+        className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+      >
+        {pending ? "Starting..." : "Start show"}
+      </button>
+      {state?.error && <p className="mt-2 text-sm text-red-600">{state.error}</p>}
+    </form>
+  );
+}
 
 export function ShowNameForm({ showId, initialName }: { showId: number; initialName: string }) {
   const [state, formAction, pending] = useActionState(updateShowName, undefined);

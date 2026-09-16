@@ -1,6 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/access";
 import { db } from "@/lib/db";
@@ -28,6 +29,28 @@ export async function updateShowName(_prev: ActionState, formData: FormData): Pr
   await db.update(shows).set({ name }).where(eq(shows.id, id));
   revalidatePath(`/admin/shows/${id}`);
   return undefined;
+}
+
+export async function startShow(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+
+  const id = Number(formData.get("showId"));
+  if (!Number.isInteger(id)) return { error: "Invalid show." };
+
+  const show = await findShow(id);
+  if (!show) return { error: "Show not found." };
+  if (show.status !== "setup") redirect(`/admin/shows/${id}/run`);
+
+  const [first] = await db
+    .select()
+    .from(contestants)
+    .where(eq(contestants.showId, id))
+    .orderBy(contestants.position)
+    .limit(1);
+  if (!first) return { error: "Add at least one contestant before starting the show." };
+
+  await db.update(shows).set({ status: "live", currentContestantId: first.id }).where(eq(shows.id, id));
+  redirect(`/admin/shows/${id}/run`);
 }
 
 export async function saveJudges(_prev: ActionState, formData: FormData): Promise<ActionState> {
