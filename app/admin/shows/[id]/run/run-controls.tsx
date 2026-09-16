@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { openVoting, revealVotes, reopenVoting, nextContestant } from "./actions";
+import { openVoting, revealVotes, reopenVoting, nextContestant, moveToAudience } from "./actions";
 
 type Contestant = {
   id: number;
@@ -17,16 +17,19 @@ export function RunControls({
   contestant,
   judges,
   votes,
+  isLastContestant,
 }: {
   showId: number;
   contestant: Contestant;
   judges: Judge[];
   votes: Vote[];
+  isLastContestant: boolean;
 }) {
   const [openState, openAction, openPending] = useActionState(openVoting, undefined);
   const [revealState, revealAction, revealPending] = useActionState(revealVotes, undefined);
   const [reopenState, reopenAction, reopenPending] = useActionState(reopenVoting, undefined);
   const [nextState, nextAction, nextPending] = useActionState(nextContestant, undefined);
+  const [audienceState, audienceAction, audiencePending] = useActionState(moveToAudience, undefined);
 
   const voteByJudge = new Map(votes.map((v) => [v.judgeId, v.value]));
   const points = votes.filter((v) => v.value === "yellow").length;
@@ -92,17 +95,31 @@ export function RunControls({
               {reopenState?.error && <p className="mt-2 text-sm text-red-600">{reopenState.error}</p>}
             </form>
 
-            <form action={nextAction}>
-              <input type="hidden" name="showId" value={showId} />
-              <button
-                type="submit"
-                disabled={nextPending}
-                className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
-              >
-                {nextPending ? "Advancing..." : "Next contestant"}
-              </button>
-              {nextState?.error && <p className="mt-2 text-sm text-red-600">{nextState.error}</p>}
-            </form>
+            {isLastContestant ? (
+              <form action={audienceAction}>
+                <input type="hidden" name="showId" value={showId} />
+                <button
+                  type="submit"
+                  disabled={audiencePending}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+                >
+                  {audiencePending ? "Moving..." : "Move to audience vote"}
+                </button>
+                {audienceState?.error && <p className="mt-2 text-sm text-red-600">{audienceState.error}</p>}
+              </form>
+            ) : (
+              <form action={nextAction}>
+                <input type="hidden" name="showId" value={showId} />
+                <button
+                  type="submit"
+                  disabled={nextPending}
+                  className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+                >
+                  {nextPending ? "Advancing..." : "Next contestant"}
+                </button>
+                {nextState?.error && <p className="mt-2 text-sm text-red-600">{nextState.error}</p>}
+              </form>
+            )}
           </div>
         </>
       )}

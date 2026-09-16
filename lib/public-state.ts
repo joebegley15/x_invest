@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { shows, judges, contestants, judgeVotes } from "@/lib/schema";
+import { getScoreboard, type ScoreboardRow } from "@/lib/results";
 import type { VoteValue } from "./vote";
 
 export type PublicState =
@@ -12,11 +13,36 @@ export type PublicState =
       contestantName: string;
       status: "waiting" | "voting" | "revealed";
       judges: { id: number; name: string; vote: VoteValue }[];
-    };
+    }
+  | { phase: "audience"; showName: string; contestants: { id: number; startupName: string }[] }
+  | { phase: "complete"; showName: string; rows: ScoreboardRow[]; winnerContestantId: number | null };
 
 export async function getPublicState(): Promise<PublicState> {
-  const [show] = await db.select().from(shows).where(eq(shows.status, "live"));
+  const [inProgress] = await db.select().from(shows).where(inArray(shows.status, ["live", "audience"]));
+  const [mostRecentComplete] = inProgress
+    ? []
+    : await db.select().from(shows).where(eq(shows.status, "complete")).orderBy(desc(shows.id)).limit(1);
+  const show = inProgress ?? mostRecentComplete;
   if (!show) return { phase: "no-show" };
+
+  if (show.status === "audience") {
+    const showContestants = await db
+      .select({ id: contestants.id, startupName: contestants.startupName })
+      .from(contestants)
+      .where(eq(contestants.showId, show.id))
+      .orderBy(contestants.position);
+    return { phase: "audience", showName: show.name, contestants: showContestants };
+  }
+
+  if (show.status === "complete") {
+    const scoreboard = await getScoreboard(show.id);
+    return {
+      phase: "complete",
+      showName: show.name,
+      rows: scoreboard?.rows ?? [],
+      winnerContestantId: show.winnerContestantId,
+    };
+  }
 
   if (!show.currentContestantId) return { phase: "no-contestant", showName: show.name };
 

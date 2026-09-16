@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchPublicState } from "./actions";
 import type { PublicState } from "@/lib/public-state";
+import { Scoreboard } from "./scoreboard";
 
 const colorClasses: Record<"neutral" | "red" | "yellow", string> = {
   neutral: "border-zinc-700 bg-zinc-900",
@@ -29,6 +30,34 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-black p-8 text-center">
         <h1 className="text-5xl font-bold text-zinc-100">{state.showName}</h1>
         <p className="text-3xl text-zinc-400">Waiting to begin</p>
+      </div>
+    );
+  }
+
+  if (state.phase === "audience") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-10 bg-black p-8 text-center">
+        <h1 className="text-4xl font-bold text-zinc-100 sm:text-5xl">{state.showName}</h1>
+        <p className="text-3xl font-semibold text-zinc-200">Audience vote</p>
+        <div className="flex flex-row flex-wrap items-center justify-center gap-6">
+          {state.contestants.map((c) => (
+            <span
+              key={c.id}
+              className="rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-4 text-2xl font-medium text-zinc-100"
+            >
+              {c.startupName}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (state.phase === "complete") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-10 bg-black p-8 text-center">
+        <h1 className="text-4xl font-bold text-zinc-100 sm:text-5xl">{state.showName}</h1>
+        <Scoreboard rows={state.rows} winnerContestantId={state.winnerContestantId} />
       </div>
     );
   }
