@@ -8,8 +8,8 @@
   --color-lavender: #8d86b8;
   --color-ice: #c9d3f0;
   --color-dusk: #5a4a7a;
-  --color-vote-out: #d9534f;
-  --color-vote-in: #4fbf85;
+  --color-vote-out: #e5484d;
+  --color-vote-in: #3fd48a;
 
   --font-display: var(--font-anton);
   --font-serif: var(--font-fraunces);
@@ -54,3 +54,4 @@ body {
     opacity: 0.75;
   }
 }
+

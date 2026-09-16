@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/access";
 import { db } from "@/lib/db";
 import { shows, contestants, judgeVotes } from "@/lib/schema";
 import { judgePointsByContestant, computeScores, findOverallWinner, validateAudienceBonusPoints } from "@/lib/scoring";
+import { broadcastLiveState } from "@/lib/live-broadcast";
 
 export type ActionState = { error?: string } | undefined;
 
@@ -60,6 +61,7 @@ export async function openVoting(_prev: ActionState, formData: FormData): Promis
 
   await db.update(contestants).set({ status: "voting" }).where(eq(contestants.id, contestantId));
   revalidatePath(`/admin/shows/${showId}/run`);
+  await broadcastLiveState();
   return undefined;
 }
 
@@ -82,6 +84,7 @@ export async function revealVotes(_prev: ActionState, formData: FormData): Promi
 
   await db.update(contestants).set({ status: "revealed" }).where(eq(contestants.id, contestantId));
   revalidatePath(`/admin/shows/${showId}/run`);
+  await broadcastLiveState();
   return undefined;
 }
 
@@ -104,6 +107,7 @@ export async function reopenVoting(_prev: ActionState, formData: FormData): Prom
 
   await db.update(contestants).set({ status: "voting" }).where(eq(contestants.id, contestantId));
   revalidatePath(`/admin/shows/${showId}/run`);
+  await broadcastLiveState();
   return undefined;
 }
 
@@ -135,6 +139,7 @@ export async function nextContestant(_prev: ActionState, formData: FormData): Pr
 
   await db.update(shows).set({ currentContestantId: next.id }).where(eq(shows.id, showId));
   revalidatePath(`/admin/shows/${showId}/run`);
+  await broadcastLiveState();
   return undefined;
 }
 
@@ -166,6 +171,7 @@ export async function moveToAudience(_prev: ActionState, formData: FormData): Pr
   await db.update(shows).set({ status: "audience" }).where(eq(shows.id, showId));
 
   revalidatePath(`/admin/shows/${showId}/run`);
+  await broadcastLiveState();
   return undefined;
 }
 
@@ -225,5 +231,6 @@ export async function confirmWinner(_prev: ActionState, formData: FormData): Pro
     .set({ winnerContestantId: contestantId, status: "complete" })
     .where(eq(shows.id, showId));
   revalidatePath(`/admin/shows/${showId}/run`);
+  await broadcastLiveState();
   return undefined;
 }

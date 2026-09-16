@@ -1,23 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchPublicState } from "./actions";
 import type { PublicState } from "@/lib/public-state";
 import { Scoreboard } from "./scoreboard";
 import { Starfield } from "./components/starfield";
 import { IceStrip } from "./components/ice-strip";
 import { ShowTitle } from "./components/show-title";
 import { Label } from "./components/label";
-import { VoteBox } from "./components/vote-box";
+import SummitFlag from "./components/SummitFlag";
 
 export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   const [state, setState] = useState<PublicState>(initialState);
 
+  console.log(state);
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchPublicState().then(setState).catch(() => {});
-    }, 2000);
-    return () => clearInterval(interval);
+    const source = new EventSource("/api/live-state");
+    source.onmessage = (event) => {
+      try {
+        setState(JSON.parse(event.data));
+      } catch {}
+    };
+    return () => source.close();
   }, []);
 
   if (state.phase === "no-show") {
@@ -72,7 +76,6 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   }
 
   const greenlights = state.judges.filter((j) => j.vote === "green").length;
-  const showGreenlights = state.status === "revealed";
 
   return (
     <Shell>
@@ -86,19 +89,20 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
       >
         {state.contestantName}
       </p>
-      <div className="flex w-full max-w-5xl flex-row flex-wrap items-start justify-center gap-8">
+      <div className="flex w-full max-w-5xl flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-center">
         {state.judges.map((j) => (
-          <div key={j.id} className="flex w-40 flex-col items-center gap-3 sm:w-56">
+          <div
+            key={j.id}
+            className="flex w-56 min-w-0 flex-col items-center gap-3 sm:w-auto sm:flex-1 sm:max-w-[320px]"
+          >
             <span className="font-display uppercase tracking-[0.02em] text-ice">{j.name}</span>
-            <VoteBox vote={j.vote} status={state.status} size="lg" />
+            <SummitFlag vote={j.vote} judgeName={j.name} />
           </div>
         ))}
       </div>
-      {showGreenlights && (
         <p className="font-display uppercase tracking-[0.02em] text-gold" style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)" }}>
           {greenlights} {greenlights === 1 ? "Greenlight" : "Greenlights"}
         </p>
-      )}
     </Shell>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { openVoting, revealVotes, reopenVoting, nextContestant, moveToAudience } from "./actions";
-import { VoteBox } from "@/app/components/vote-box";
+import SummitFlag from "@/app/components/SummitFlag";
 import type { VoteValue } from "@/lib/vote";
 
 type Contestant = {
@@ -81,14 +81,14 @@ export function RunControls({
             </p>
             <div className="mt-3 flex flex-wrap gap-4">
               {judges.map((j) => (
-                <div key={j.id} className="flex flex-col items-center gap-2">
+                <div key={j.id} className="flex w-24 flex-col items-center gap-2">
                   <span className="font-display text-xs uppercase tracking-[0.02em] text-ice">
                     {j.name}
                   </span>
-                  <VoteBox
+                  <SummitFlag
                     vote={(voteByJudge.get(j.id) as VoteValue) ?? "neutral"}
-                    status="revealed"
-                    size="sm"
+                    revealed
+                    judgeName={j.name}
                   />
                 </div>
               ))}
