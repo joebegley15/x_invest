@@ -20,10 +20,10 @@ export function ShowTitle({
 
   return (
     <div className="relative z-10 flex flex-col items-center text-center">
-      <p className="font-serif text-ice pb-2">Presented by Haha Hidalgo and Fabric</p>
+      <p className="font-serif text-ice pb-1 text-sm sm:text-base">Presented by Haha Hidalgo and Fabric</p>
       <h1
         className="title-gradient font-display uppercase tracking-[0.02em] leading-[0.9]"
-        style={{ fontSize: "clamp(4rem, 12vw, 10rem)" }}
+        style={{ fontSize: "clamp(2rem, 12vmin, 7.5rem)" }}
       >
         {title}
       </h1>

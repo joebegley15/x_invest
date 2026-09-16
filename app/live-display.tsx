@@ -28,7 +28,7 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
     return (
       <Shell>
         <ShowTitle size="lg" />
-        <p className="font-serif text-xl text-ice sm:text-2xl">The show will begin soon.</p>
+        <p className="font-serif text-lg text-ice sm:text-xl">The show will begin soon.</p>
       </Shell>
     );
   }
@@ -37,7 +37,7 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
     return (
       <Shell>
         <ShowTitle size="lg" name={state.showName} />
-        <Label className="text-xl sm:text-2xl">Starting soon</Label>
+        <Label className="text-lg sm:text-xl">Starting soon</Label>
       </Shell>
     );
   }
@@ -46,13 +46,13 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
     return (
       <Shell>
         <ShowTitle size="lg" name={state.showName} />
-        <Label className="text-xl sm:text-2xl">Audience vote</Label>
-        <div className="flex flex-col items-center gap-4">
+        <Label className="text-lg sm:text-xl">Audience vote</Label>
+        <div className="flex flex-col items-center gap-2">
           {state.contestants.map((c) => (
             <span
               key={c.id}
               className="font-display uppercase tracking-[0.02em] text-white"
-              style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
+              style={{ fontSize: "clamp(1.5rem, 6vmin, 4rem)" }}
             >
               {c.startupName}
             </span>
@@ -80,41 +80,42 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   return (
     <Shell>
       <ShowTitle size="lg" name={state.showName} />
-      <Label className="text-xl sm:text-2xl">
+      <Label className="text-lg sm:text-xl">
         Founder {state.contestantPosition} of {state.totalContestants}
       </Label>
       <p
         className="font-display uppercase tracking-[0.02em] text-white"
-        style={{ fontSize: "clamp(3rem, 7vw, 6rem)" }}
+        style={{ fontSize: "clamp(2rem, 9vmin, 6rem)" }}
       >
         {state.contestantName}
       </p>
       <div
-        className="flex w-full max-w-5xl flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-center"
-        style={{ fontSize: "clamp(1.5rem, 4vw, 3rem)" }}
+        className="flex w-full max-w-5xl flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-center sm:gap-6"
+        style={{ fontSize: "clamp(1rem, 4vmin, 2.5rem)" }}
       >
         {state.judges.map((j) => (
           <div
             key={j.id}
-            className="flex w-56 min-w-0 flex-col items-center gap-3 sm:w-auto sm:flex-1 sm:max-w-[320px]"
+            className="flex w-40 min-w-0 flex-col items-center gap-1.5 sm:w-auto sm:flex-1"
+            style={{ maxWidth: "clamp(120px, 28vmin, 300px)" }}
           >
             <span className="font-display uppercase tracking-[0.02em] text-ice">{j.name}</span>
             <SummitFlag vote={j.vote} judgeName={j.name} />
           </div>
         ))}
       </div>
-        <p className="font-display uppercase tracking-[0.02em] text-gold" style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)" }}>
-          {greenlights} {greenlights === 1 ? "Greenlight" : "Greenlights"}
-        </p>
+      <p className="font-display uppercase tracking-[0.02em] text-gold" style={{ fontSize: "clamp(1rem, 3.5vmin, 2.5rem)" }}>
+        {greenlights} {greenlights === 1 ? "Greenlight" : "Greenlights"}
+      </p>
     </Shell>
   );
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-navy">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-navy">
       <Starfield />
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-6 px-6 py-10 text-center sm:gap-8 sm:px-8">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-6 py-4 text-center sm:gap-4 sm:px-8">
         {children}
       </div>
       <IceStrip />

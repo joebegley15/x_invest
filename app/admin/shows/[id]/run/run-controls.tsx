@@ -87,7 +87,6 @@ export function RunControls({
                   </span>
                   <SummitFlag
                     vote={(voteByJudge.get(j.id) as VoteValue) ?? "neutral"}
-                    revealed
                     judgeName={j.name}
                   />
                 </div>

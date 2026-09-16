@@ -14,9 +14,9 @@ export function Scoreboard({
   titleSize?: "lg" | "sm";
 }) {
   return (
-    <div className="flex w-full max-w-2xl flex-col items-center gap-6">
+    <div className="flex w-full max-w-2xl flex-col items-center gap-3">
       <ShowTitle size={titleSize} name={showName} />
-      <p className="font-serif text-lg text-ice sm:text-xl">Final results</p>
+      <p className="font-serif text-base text-ice sm:text-lg">Final results</p>
 
       <div className="grid w-full grid-cols-[2fr_1fr_1fr_1fr] gap-2 px-2">
         <Label className="text-xs sm:text-sm">Startup</Label>
@@ -25,13 +25,13 @@ export function Scoreboard({
         <Label className="text-center text-xs sm:text-sm">Total</Label>
       </div>
 
-      <div className="flex w-full flex-col gap-3">
+      <div className="flex w-full flex-col gap-1.5">
         {rows.map((row) => {
           const isWinner = row.contestantId === winnerContestantId;
           return (
             <div
               key={row.contestantId}
-              className={`grid grid-cols-[2fr_1fr_1fr_1fr] items-center gap-2 rounded-xl border px-3 py-3 sm:px-4 ${
+              className={`grid grid-cols-[2fr_1fr_1fr_1fr] items-center gap-2 rounded-xl border px-3 py-2 sm:px-4 ${
                 isWinner ? "border-gold bg-gold" : "border-line bg-transparent"
               }`}
             >
