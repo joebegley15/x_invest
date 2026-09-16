@@ -5,6 +5,7 @@ import type { PublicState } from "@/lib/public-state";
 import { Scoreboard } from "./scoreboard";
 import { Stage } from "./components/stage";
 import SummitFlag from "./components/SummitFlag";
+import { AudienceCard } from "./components/audience-card";
 
 export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   const [state, setState] = useState<PublicState>(initialState);
@@ -36,18 +37,19 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   }
 
   if (state.phase === "audience") {
+    const mode = state.bonusConfirmed ? "bonus" : "vote";
     return (
-      <Stage showName={state.showName} label="Audience vote" itemCount={state.contestants.length}>
+      <Stage
+        showName={state.showName}
+        label={mode === "bonus" ? "Audience bonus" : "Audience vote"}
+        itemCount={state.contestants.length}
+      >
         <Centered>
-          {state.contestants.map((c) => (
-            <span
-              key={c.id}
-              className="font-display uppercase tracking-[0.02em] text-white"
-              style={{ fontSize: "clamp(1.5rem, 6vmin, 4rem)" }}
-            >
-              {c.startupName}
-            </span>
-          ))}
+          <div key={mode} className="flex items-center justify-center gap-4 sm:gap-6">
+            {state.contestants.map((c) => (
+              <AudienceCard key={c.contestantId} data={c} mode={mode} />
+            ))}
+          </div>
         </Centered>
       </Stage>
     );

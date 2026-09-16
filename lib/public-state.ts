@@ -2,7 +2,18 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { shows, judges, contestants, judgeVotes } from "@/lib/schema";
 import { getScoreboard, type ScoreboardRow } from "@/lib/results";
+import { judgePointsByContestant, computeScores } from "@/lib/scoring";
 import type { VoteValue } from "./vote";
+
+export type AudienceCardState = {
+  contestantId: number;
+  position: number;
+  startupName: string;
+  judgePoints: number;
+  totalJudges: number;
+  audienceBonus: number;
+  total: number;
+};
 
 export type PublicState =
   | { phase: "no-show" }
@@ -19,7 +30,8 @@ export type PublicState =
   | {
       phase: "audience";
       showName: string;
-      contestants: { id: number; startupName: string; audienceBonusPoints: number }[];
+      bonusConfirmed: boolean;
+      contestants: AudienceCardState[];
     }
   | { phase: "complete"; showName: string; rows: ScoreboardRow[]; winnerContestantId: number | null };
 
@@ -36,12 +48,48 @@ export async function getPublicState(): Promise<PublicState> {
       .select({
         id: contestants.id,
         startupName: contestants.startupName,
+        position: contestants.position,
         audienceBonusPoints: contestants.audienceBonusPoints,
       })
       .from(contestants)
       .where(eq(contestants.showId, show.id))
       .orderBy(contestants.position);
-    return { phase: "audience", showName: show.name, contestants: showContestants };
+
+    const showJudges = await db
+      .select({ id: judges.id })
+      .from(judges)
+      .where(eq(judges.showId, show.id));
+
+    const contestantIds = showContestants.map((c) => c.id);
+    const votes = contestantIds.length
+      ? await db
+          .select({ contestantId: judgeVotes.contestantId, value: judgeVotes.value })
+          .from(judgeVotes)
+          .where(inArray(judgeVotes.contestantId, contestantIds))
+      : [];
+
+    const judgePoints = judgePointsByContestant(votes);
+    const audienceBonus = new Map(showContestants.map((c) => [c.id, c.audienceBonusPoints]));
+    const scores = computeScores(contestantIds, judgePoints, audienceBonus);
+    const scoreByContestantId = new Map(scores.map((s) => [s.contestantId, s]));
+
+    return {
+      phase: "audience",
+      showName: show.name,
+      bonusConfirmed: show.audienceBonusConfirmed,
+      contestants: showContestants.map((c) => {
+        const score = scoreByContestantId.get(c.id)!;
+        return {
+          contestantId: c.id,
+          position: c.position,
+          startupName: c.startupName,
+          judgePoints: score.judgePoints,
+          totalJudges: showJudges.length,
+          audienceBonus: score.audienceBonus,
+          total: score.total,
+        };
+      }),
+    };
   }
 
   if (show.status === "complete") {

@@ -55,3 +55,32 @@ body {
   }
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .audience-card-gold {
+    animation: audience-card-reveal-gold 400ms ease-out forwards;
+  }
+  .audience-card-dim {
+    animation: audience-card-reveal-dim 400ms ease-out forwards;
+  }
+}
+
+@keyframes audience-card-reveal-gold {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes audience-card-reveal-dim {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
