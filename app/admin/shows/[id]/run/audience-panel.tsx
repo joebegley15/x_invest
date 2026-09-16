@@ -4,6 +4,11 @@ import { contestants, judgeVotes } from "@/lib/schema";
 import { judgePointsByContestant, computeScores, findOverallWinner } from "@/lib/scoring";
 import { AudienceBonusForm, ConfirmWinnerForm } from "./audience-forms";
 
+const audienceBonusClasses: Record<number, string> = {
+  1: "text-yellow-600 dark:text-yellow-400 font-semibold",
+  2: "text-green-600 dark:text-green-400 font-semibold",
+};
+
 export async function AudiencePanel({
   showId,
   audienceBonusConfirmed,
@@ -48,8 +53,9 @@ export async function AudiencePanel({
       <ul className="mt-3 flex flex-col gap-1 text-sm">
         {scores.map((s) => (
           <li key={s.contestantId}>
-            {byId.get(s.contestantId)?.startupName}: {s.judgePoints} judge + {s.audienceBonus} audience ={" "}
-            {s.total}
+            {byId.get(s.contestantId)?.startupName}: {s.judgePoints} judge +{" "}
+            <span className={audienceBonusClasses[s.audienceBonus] ?? ""}>{s.audienceBonus}</span>{" "}
+            audience = {s.total}
           </li>
         ))}
       </ul>

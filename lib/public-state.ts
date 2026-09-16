@@ -14,7 +14,11 @@ export type PublicState =
       status: "waiting" | "voting" | "revealed";
       judges: { id: number; name: string; vote: VoteValue }[];
     }
-  | { phase: "audience"; showName: string; contestants: { id: number; startupName: string }[] }
+  | {
+      phase: "audience";
+      showName: string;
+      contestants: { id: number; startupName: string; audienceBonusPoints: number }[];
+    }
   | { phase: "complete"; showName: string; rows: ScoreboardRow[]; winnerContestantId: number | null };
 
 export async function getPublicState(): Promise<PublicState> {
@@ -27,7 +31,11 @@ export async function getPublicState(): Promise<PublicState> {
 
   if (show.status === "audience") {
     const showContestants = await db
-      .select({ id: contestants.id, startupName: contestants.startupName })
+      .select({
+        id: contestants.id,
+        startupName: contestants.startupName,
+        audienceBonusPoints: contestants.audienceBonusPoints,
+      })
       .from(contestants)
       .where(eq(contestants.showId, show.id))
       .orderBy(contestants.position);

@@ -11,6 +11,12 @@ const colorClasses: Record<"neutral" | "red" | "yellow", string> = {
   yellow: "border-yellow-500 bg-yellow-400",
 };
 
+const audienceBonusClasses: Record<number, string> = {
+  0: "border-zinc-700 bg-zinc-900 text-zinc-100",
+  1: "border-yellow-500 bg-yellow-400 text-yellow-950",
+  2: "border-green-500 bg-green-400 text-green-950",
+};
+
 export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   const [state, setState] = useState<PublicState>(initialState);
 
@@ -43,7 +49,9 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
           {state.contestants.map((c) => (
             <span
               key={c.id}
-              className="rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-4 text-2xl font-medium text-zinc-100"
+              className={`rounded-xl border px-6 py-4 text-2xl font-medium transition-colors ${
+                audienceBonusClasses[c.audienceBonusPoints] ?? audienceBonusClasses[0]
+              }`}
             >
               {c.startupName}
             </span>

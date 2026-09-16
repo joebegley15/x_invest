@@ -1,5 +1,10 @@
 import type { ScoreboardRow } from "@/lib/results";
 
+const audienceBonusClasses: Record<number, string> = {
+  1: "text-yellow-600 dark:text-yellow-400 font-semibold",
+  2: "text-green-600 dark:text-green-400 font-semibold",
+};
+
 export function Scoreboard({
   rows,
   winnerContestantId,
@@ -37,7 +42,9 @@ export function Scoreboard({
                   )}
                 </td>
                 <td className="px-4 py-3">{row.judgePoints}</td>
-                <td className="px-4 py-3">{row.audienceBonus}</td>
+                <td className={`px-4 py-3 ${audienceBonusClasses[row.audienceBonus] ?? ""}`}>
+                  {row.audienceBonus}
+                </td>
                 <td className="px-4 py-3 font-semibold">{row.total}</td>
               </tr>
             );
