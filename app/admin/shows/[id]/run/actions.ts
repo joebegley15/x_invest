@@ -64,6 +64,28 @@ export async function revealVotes(_prev: ActionState, formData: FormData): Promi
   return undefined;
 }
 
+export async function reopenVoting(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+
+  const { showId, contestantId } = parseIds(formData);
+  if (!Number.isInteger(showId) || !Number.isInteger(contestantId)) return { error: "Invalid request." };
+
+  const show = await findShow(showId);
+  if (!show) return { error: "Show not found." };
+  if (show.status !== "live" || show.currentContestantId !== contestantId) {
+    return { error: "This contestant is not currently on stage." };
+  }
+
+  const [contestant] = await db.select().from(contestants).where(eq(contestants.id, contestantId));
+  if (!contestant || contestant.status !== "revealed") {
+    return { error: "Voting can only be reopened after a reveal." };
+  }
+
+  await db.update(contestants).set({ status: "voting" }).where(eq(contestants.id, contestantId));
+  revalidatePath(`/admin/shows/${showId}/run`);
+  return undefined;
+}
+
 export async function nextContestant(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
 

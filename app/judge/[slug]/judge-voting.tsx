@@ -4,18 +4,6 @@ import { useEffect, useState, useTransition } from "react";
 import { castVote, fetchJudgeState } from "./actions";
 import type { JudgeState } from "@/lib/judge-state";
 
-const labels: Record<"neutral" | "red" | "yellow", string> = {
-  neutral: "Tap to vote",
-  red: "RED",
-  yellow: "YELLOW",
-};
-
-const colorClasses: Record<"neutral" | "red" | "yellow", string> = {
-  neutral: "bg-zinc-700 text-zinc-100",
-  red: "bg-red-600 text-white",
-  yellow: "bg-yellow-400 text-zinc-900",
-};
-
 export function JudgeVoting({ slug, initialState }: { slug: string; initialState: JudgeState }) {
   const [state, setState] = useState<JudgeState>(initialState);
   const [, startTransition] = useTransition();
@@ -39,34 +27,51 @@ export function JudgeVoting({ slug, initialState }: { slug: string; initialState
 
   const clickable = state.status === "voting";
 
-  function handleClick() {
+  function handleTap(tapped: "red" | "yellow") {
     if (!clickable || state.phase !== "contestant") return;
     const { judgeId, contestantId } = state;
     startTransition(async () => {
       try {
-        const next = await castVote(slug, judgeId, contestantId);
+        const next = await castVote(slug, judgeId, contestantId, tapped);
         setState(next);
       } catch {
-        // A stale click; the next poll will resync the button.
+        // A stale click; the next poll will resync the buttons.
       }
     });
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-black p-6 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-black p-6 text-center">
       <p className="text-xl text-zinc-300">{state.contestantName}</p>
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={!clickable}
-        className={`h-64 w-64 max-w-[80vw] rounded-full text-2xl font-bold transition-colors ${colorClasses[state.vote]} ${
-          clickable ? "" : "opacity-60"
-        }`}
-      >
+      <p className="text-sm uppercase tracking-wide text-zinc-500">
         {state.status === "waiting" && "Get ready"}
-        {state.status === "voting" && labels[state.vote]}
+        {state.status === "voting" && "Tap to vote"}
         {state.status === "revealed" && "Locked in"}
-      </button>
+      </p>
+      <div className="flex w-full max-w-xl flex-row gap-4">
+        <button
+          type="button"
+          onClick={() => handleTap("red")}
+          disabled={!clickable}
+          aria-pressed={state.vote === "red"}
+          className={`h-40 flex-1 rounded-2xl bg-red-600 text-2xl font-bold text-white transition-opacity ${
+            state.vote === "red" ? "border-8 border-white" : "border-8 border-transparent"
+          } ${clickable ? "" : "opacity-60"}`}
+        >
+          RED
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTap("yellow")}
+          disabled={!clickable}
+          aria-pressed={state.vote === "yellow"}
+          className={`h-40 flex-1 rounded-2xl bg-yellow-400 text-2xl font-bold text-zinc-900 transition-opacity ${
+            state.vote === "yellow" ? "border-8 border-white" : "border-8 border-transparent"
+          } ${clickable ? "" : "opacity-60"}`}
+        >
+          YELLOW
+        </button>
+      </div>
     </div>
   );
 }

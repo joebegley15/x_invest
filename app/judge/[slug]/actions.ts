@@ -5,7 +5,7 @@ import { requireJudge } from "@/lib/access";
 import { db } from "@/lib/db";
 import { judges, shows, contestants, judgeVotes } from "@/lib/schema";
 import { getJudgeState, type JudgeState } from "@/lib/judge-state";
-import { nextVoteValue } from "@/lib/vote";
+import { toggleVote } from "@/lib/vote";
 
 export async function fetchJudgeState(slug: string): Promise<JudgeState> {
   await requireJudge();
@@ -15,11 +15,17 @@ export async function fetchJudgeState(slug: string): Promise<JudgeState> {
 export async function castVote(
   slug: string,
   judgeId: number,
-  contestantId: number
+  contestantId: number,
+  tapped: "red" | "yellow"
 ): Promise<JudgeState> {
   await requireJudge();
 
-  if (!slug || !Number.isInteger(judgeId) || !Number.isInteger(contestantId)) {
+  if (
+    !slug ||
+    !Number.isInteger(judgeId) ||
+    !Number.isInteger(contestantId) ||
+    (tapped !== "red" && tapped !== "yellow")
+  ) {
     throw new Error("Invalid vote request.");
   }
 
@@ -41,7 +47,7 @@ export async function castVote(
     .from(judgeVotes)
     .where(and(eq(judgeVotes.judgeId, judgeId), eq(judgeVotes.contestantId, contestantId)));
 
-  const value = nextVoteValue(existing?.value ?? "neutral");
+  const value = toggleVote(existing?.value ?? "neutral", tapped);
 
   if (existing) {
     await db.update(judgeVotes).set({ value, updatedAt: new Date() }).where(eq(judgeVotes.id, existing.id));
