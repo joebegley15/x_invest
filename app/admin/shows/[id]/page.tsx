@@ -13,9 +13,9 @@ export default async function ShowPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
-
   const { id: idParam } = await params;
+  await requireAdmin(`/admin/shows/${idParam}`);
+
   const id = Number(idParam);
   if (!Number.isInteger(id)) notFound();
 

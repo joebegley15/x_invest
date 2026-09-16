@@ -7,9 +7,9 @@ export default async function JudgePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireJudge();
-
   const { slug } = await params;
+  await requireJudge(`/judge/${slug}`);
+
   const state = await getJudgeState(slug);
 
   return <JudgeVoting slug={slug} initialState={state} />;

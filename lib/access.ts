@@ -12,10 +12,16 @@ export async function hasJudgeAccess() {
   return value === (await expectedJudgeValue());
 }
 
-export async function requireAdmin() {
-  if (!(await hasAdminAccess())) redirect("/login?role=admin");
+export async function requireAdmin(path?: string) {
+  if (!(await hasAdminAccess())) {
+    const next = path ? `&next=${encodeURIComponent(path)}` : "";
+    redirect(`/login?role=admin${next}`);
+  }
 }
 
-export async function requireJudge() {
-  if (!(await hasJudgeAccess())) redirect("/login?role=judge");
+export async function requireJudge(path?: string) {
+  if (!(await hasJudgeAccess())) {
+    const next = path ? `&next=${encodeURIComponent(path)}` : "";
+    redirect(`/login?role=judge${next}`);
+  }
 }

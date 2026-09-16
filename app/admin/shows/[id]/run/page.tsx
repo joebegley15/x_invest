@@ -14,9 +14,9 @@ export default async function RunPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
-
   const { id: idParam } = await params;
+  await requireAdmin(`/admin/shows/${idParam}/run`);
+
   const id = Number(idParam);
   if (!Number.isInteger(id)) notFound();
 

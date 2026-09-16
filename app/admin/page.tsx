@@ -8,7 +8,7 @@ import { ShowTitle } from "@/app/components/show-title";
 import { StatusBadge } from "@/app/components/status-badge";
 
 export default async function AdminHomePage() {
-  await requireAdmin();
+  await requireAdmin("/admin");
 
   const allShows = await db.select().from(shows).orderBy(desc(shows.createdAt));
 
