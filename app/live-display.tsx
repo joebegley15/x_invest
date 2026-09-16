@@ -4,18 +4,11 @@ import { useEffect, useState } from "react";
 import { fetchPublicState } from "./actions";
 import type { PublicState } from "@/lib/public-state";
 import { Scoreboard } from "./scoreboard";
-
-const colorClasses: Record<"neutral" | "red" | "green", string> = {
-  neutral: "border-zinc-700 bg-zinc-900",
-  red: "border-red-600 bg-red-500",
-  green: "border-[#4fbf85] bg-[#4fbf85]",
-};
-
-const audienceBonusClasses: Record<number, string> = {
-  0: "border-zinc-700 bg-zinc-900 text-zinc-100",
-  1: "border-yellow-500 bg-yellow-400 text-yellow-950",
-  2: "border-green-500 bg-green-400 text-green-950",
-};
+import { Starfield } from "./components/starfield";
+import { IceStrip } from "./components/ice-strip";
+import { ShowTitle } from "./components/show-title";
+import { Label } from "./components/label";
+import { VoteBox } from "./components/vote-box";
 
 export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   const [state, setState] = useState<PublicState>(initialState);
@@ -28,70 +21,96 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   }, []);
 
   if (state.phase === "no-show") {
-    return <Message text="No show running" />;
+    return (
+      <Shell>
+        <ShowTitle size="lg" />
+        <p className="font-serif text-xl text-ice sm:text-2xl">The show will begin soon.</p>
+      </Shell>
+    );
   }
 
   if (state.phase === "no-contestant") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-black p-8 text-center">
-        <h1 className="text-5xl font-bold text-zinc-100">{state.showName}</h1>
-        <p className="text-3xl text-zinc-400">Waiting to begin</p>
-      </div>
+      <Shell>
+        <ShowTitle size="lg" name={state.showName} />
+        <Label className="text-xl sm:text-2xl">Starting soon</Label>
+      </Shell>
     );
   }
 
   if (state.phase === "audience") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-10 bg-black p-8 text-center">
-        <h1 className="text-4xl font-bold text-zinc-100 sm:text-5xl">{state.showName}</h1>
-        <p className="text-3xl font-semibold text-zinc-200">Audience vote</p>
-        <div className="flex flex-row flex-wrap items-center justify-center gap-6">
+      <Shell>
+        <ShowTitle size="lg" name={state.showName} />
+        <Label className="text-xl sm:text-2xl">Audience vote</Label>
+        <div className="flex flex-col items-center gap-4">
           {state.contestants.map((c) => (
             <span
               key={c.id}
-              className={`rounded-xl border px-6 py-4 text-2xl font-medium transition-colors ${
-                audienceBonusClasses[c.audienceBonusPoints] ?? audienceBonusClasses[0]
-              }`}
+              className="font-display uppercase tracking-[0.02em] text-white"
+              style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
             >
               {c.startupName}
             </span>
           ))}
         </div>
-      </div>
+      </Shell>
     );
   }
 
   if (state.phase === "complete") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-10 bg-black p-8 text-center">
-        <h1 className="text-4xl font-bold text-zinc-100 sm:text-5xl">{state.showName}</h1>
-        <Scoreboard rows={state.rows} winnerContestantId={state.winnerContestantId} />
-      </div>
+      <Shell>
+        <Scoreboard
+          showName={state.showName}
+          rows={state.rows}
+          winnerContestantId={state.winnerContestantId}
+          titleSize="lg"
+        />
+      </Shell>
     );
   }
 
+  const greenlights = state.judges.filter((j) => j.vote === "green").length;
+  const showGreenlights = state.status === "revealed";
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-10 bg-black p-8 text-center">
-      <h1 className="text-4xl font-bold text-zinc-100 sm:text-5xl">{state.showName}</h1>
-      <p className="text-5xl font-extrabold text-white sm:text-6xl">{state.contestantName}</p>
-      <div className="flex flex-row flex-wrap items-start justify-center gap-8">
+    <Shell>
+      <ShowTitle size="lg" name={state.showName} />
+      <Label className="text-xl sm:text-2xl">
+        Founder {state.contestantPosition} of {state.totalContestants}
+      </Label>
+      <p
+        className="font-display uppercase tracking-[0.02em] text-white"
+        style={{ fontSize: "clamp(3rem, 7vw, 6rem)" }}
+      >
+        {state.contestantName}
+      </p>
+      <div className="flex w-full max-w-5xl flex-row flex-wrap items-start justify-center gap-8">
         {state.judges.map((j) => (
-          <div key={j.id} className="flex flex-col items-center gap-4">
-            <span className="text-2xl font-semibold text-zinc-200 sm:text-3xl">{j.name}</span>
-            <div
-              className={`h-40 w-40 rounded-2xl border-8 transition-colors sm:h-56 sm:w-56 ${colorClasses[j.vote]}`}
-            />
+          <div key={j.id} className="flex w-40 flex-col items-center gap-3 sm:w-56">
+            <span className="font-display uppercase tracking-[0.02em] text-ice">{j.name}</span>
+            <VoteBox vote={j.vote} status={state.status} size="lg" />
           </div>
         ))}
       </div>
-    </div>
+      {showGreenlights && (
+        <p className="font-display uppercase tracking-[0.02em] text-gold" style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)" }}>
+          {greenlights} {greenlights === 1 ? "Greenlight" : "Greenlights"}
+        </p>
+      )}
+    </Shell>
   );
 }
 
-function Message({ text }: { text: string }) {
+function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black p-8 text-center text-4xl font-semibold text-zinc-300">
-      {text}
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-navy">
+      <Starfield />
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-6 px-6 py-10 text-center sm:gap-8 sm:px-8">
+        {children}
+      </div>
+      <IceStrip />
     </div>
   );
 }

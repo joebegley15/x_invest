@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import { openVoting, revealVotes, reopenVoting, nextContestant, moveToAudience } from "./actions";
+import { VoteBox } from "@/app/components/vote-box";
+import type { VoteValue } from "@/lib/vote";
 
 type Contestant = {
   id: number;
@@ -35,9 +37,11 @@ export function RunControls({
   const points = votes.filter((v) => v.value === "green").length;
 
   return (
-    <div className="mt-8 rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
-      <h2 className="text-xl font-semibold">{contestant.startupName}</h2>
-      <p className="mt-1 text-sm text-zinc-500">Status: {contestant.status}</p>
+    <div className="mt-8 rounded-xl border border-line bg-panel p-6">
+      <h2 className="font-display text-xl uppercase tracking-[0.02em] text-white">
+        {contestant.startupName}
+      </h2>
+      <p className="mt-1 font-serif text-sm text-lavender">Status: {contestant.status}</p>
 
       {contestant.status === "waiting" && (
         <form action={openAction} className="mt-4">
@@ -46,11 +50,11 @@ export function RunControls({
           <button
             type="submit"
             disabled={openPending}
-            className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+            className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
           >
             {openPending ? "Opening..." : "Open voting"}
           </button>
-          {openState?.error && <p className="mt-2 text-sm text-red-600">{openState.error}</p>}
+          {openState?.error && <p className="mt-2 text-sm text-vote-out">{openState.error}</p>}
         </form>
       )}
 
@@ -61,25 +65,34 @@ export function RunControls({
           <button
             type="submit"
             disabled={revealPending}
-            className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+            className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
           >
             {revealPending ? "Revealing..." : "Reveal votes"}
           </button>
-          {revealState?.error && <p className="mt-2 text-sm text-red-600">{revealState.error}</p>}
+          {revealState?.error && <p className="mt-2 text-sm text-vote-out">{revealState.error}</p>}
         </form>
       )}
 
       {contestant.status === "revealed" && (
         <>
           <div className="mt-4">
-            <p className="font-medium">Points: {points}</p>
-            <ul className="mt-2 flex flex-col gap-1 text-sm">
+            <p className="font-display uppercase tracking-[0.02em] text-gold">
+              Points: {points}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-4">
               {judges.map((j) => (
-                <li key={j.id}>
-                  {j.name}: {voteByJudge.get(j.id) ?? "neutral"}
-                </li>
+                <div key={j.id} className="flex flex-col items-center gap-2">
+                  <span className="font-display text-xs uppercase tracking-[0.02em] text-ice">
+                    {j.name}
+                  </span>
+                  <VoteBox
+                    vote={(voteByJudge.get(j.id) as VoteValue) ?? "neutral"}
+                    status="revealed"
+                    size="sm"
+                  />
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
           <div className="mt-4 flex flex-wrap items-start gap-3">
             <form action={reopenAction}>
@@ -88,11 +101,11 @@ export function RunControls({
               <button
                 type="submit"
                 disabled={reopenPending}
-                className="rounded-lg border border-zinc-300 px-4 py-2 font-medium disabled:opacity-50 dark:border-zinc-700"
+                className="rounded-lg border border-line px-4 py-2 font-display uppercase tracking-[0.02em] text-ice disabled:opacity-50"
               >
                 {reopenPending ? "Reopening..." : "Reopen voting"}
               </button>
-              {reopenState?.error && <p className="mt-2 text-sm text-red-600">{reopenState.error}</p>}
+              {reopenState?.error && <p className="mt-2 text-sm text-vote-out">{reopenState.error}</p>}
             </form>
 
             {isLastContestant ? (
@@ -101,11 +114,11 @@ export function RunControls({
                 <button
                   type="submit"
                   disabled={audiencePending}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+                  className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
                 >
                   {audiencePending ? "Moving..." : "Move to audience vote"}
                 </button>
-                {audienceState?.error && <p className="mt-2 text-sm text-red-600">{audienceState.error}</p>}
+                {audienceState?.error && <p className="mt-2 text-sm text-vote-out">{audienceState.error}</p>}
               </form>
             ) : (
               <form action={nextAction}>
@@ -113,11 +126,11 @@ export function RunControls({
                 <button
                   type="submit"
                   disabled={nextPending}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+                  className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
                 >
                   {nextPending ? "Advancing..." : "Next contestant"}
                 </button>
-                {nextState?.error && <p className="mt-2 text-sm text-red-600">{nextState.error}</p>}
+                {nextState?.error && <p className="mt-2 text-sm text-vote-out">{nextState.error}</p>}
               </form>
             )}
           </div>

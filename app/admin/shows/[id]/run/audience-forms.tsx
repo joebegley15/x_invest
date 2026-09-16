@@ -29,7 +29,7 @@ export function AudienceBonusForm({ showId, contestants }: { showId: number; con
       <input type="hidden" name="showId" value={showId} />
       <div className="flex flex-col gap-2">
         {contestants.map((c) => (
-          <label key={c.id} className="flex items-center gap-3 text-sm">
+          <label key={c.id} className="flex items-center gap-3 font-serif text-sm text-ice">
             <span className="w-40">{c.startupName}</span>
             <input
               type="number"
@@ -38,20 +38,20 @@ export function AudienceBonusForm({ showId, contestants }: { showId: number; con
               name={`points-${c.id}`}
               value={points.get(c.id) ?? 0}
               onChange={(e) => handleChange(c.id, e.target.value)}
-              className="w-20 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700 dark:bg-transparent"
+              className="w-20 rounded border border-line bg-navy px-2 py-1 text-ice focus:outline-none focus:ring-2 focus:ring-gold"
             />
           </label>
         ))}
       </div>
-      <p className="mt-3 text-sm text-zinc-500">
+      <p className="mt-3 font-serif text-sm text-lavender">
         Total: {total} of {AUDIENCE_BONUS_TOTAL}
       </p>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-      {state?.error && <p className="mt-2 text-sm text-red-600">{state.error}</p>}
+      {error && <p className="mt-1 text-sm text-vote-out">{error}</p>}
+      {state?.error && <p className="mt-2 text-sm text-vote-out">{state.error}</p>}
       <button
         type="submit"
         disabled={pending || Boolean(error)}
-        className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+        className="mt-4 rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
       >
         {pending ? "Saving..." : "Save audience bonus"}
       </button>
@@ -76,11 +76,11 @@ export function ConfirmWinnerForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+        className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
       >
         {pending ? "Confirming..." : label}
       </button>
-      {state?.error && <p className="mt-2 text-sm text-red-600">{state.error}</p>}
+      {state?.error && <p className="mt-2 text-sm text-vote-out">{state.error}</p>}
     </form>
   );
 }

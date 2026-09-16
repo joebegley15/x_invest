@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { shows } from "@/lib/schema";
 import { getScoreboard } from "@/lib/results";
 import { Scoreboard } from "@/app/scoreboard";
+import { Starfield } from "@/app/components/starfield";
+import { ShowTitle } from "@/app/components/show-title";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +21,12 @@ export default async function ResultsPage({
 
   if (show.status !== "complete") {
     return (
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-4 p-8 text-center">
-        <h1 className="text-2xl font-semibold">{show.name}</h1>
-        <p className="text-zinc-500">Results are not final yet.</p>
+      <main className="relative flex min-h-screen flex-col items-center justify-center gap-4 overflow-hidden bg-navy p-8 text-center">
+        <Starfield />
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          <ShowTitle size="sm" name={show.name} />
+          <p className="font-serif text-ice">Results are not final yet.</p>
+        </div>
       </main>
     );
   }
@@ -30,9 +35,16 @@ export default async function ResultsPage({
   if (!scoreboard) notFound();
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center gap-8 p-8">
-      <h1 className="text-3xl font-semibold">{scoreboard.showName}</h1>
-      <Scoreboard rows={scoreboard.rows} winnerContestantId={scoreboard.winnerContestantId} />
+    <main className="relative flex min-h-screen flex-col items-center overflow-hidden bg-navy p-6 sm:p-8">
+      <Starfield />
+      <div className="relative z-10 flex w-full flex-col items-center gap-8 py-8">
+        <Scoreboard
+          showName={scoreboard.showName}
+          rows={scoreboard.rows}
+          winnerContestantId={scoreboard.winnerContestantId}
+          titleSize="sm"
+        />
+      </div>
     </main>
   );
 }

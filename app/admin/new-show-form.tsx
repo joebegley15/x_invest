@@ -13,17 +13,17 @@ export function NewShowForm() {
           name="name"
           placeholder="Show name"
           required
-          className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950"
+          className="flex-1 rounded-lg border border-line bg-navy px-3 py-2 text-ice placeholder:text-lavender focus:outline-none focus:ring-2 focus:ring-gold"
         />
         <button
           type="submit"
           disabled={pending}
-          className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+          className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
         >
           {pending ? "Creating..." : "Create"}
         </button>
       </div>
-      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state?.error && <p className="text-sm text-vote-out">{state.error}</p>}
     </form>
   );
 }

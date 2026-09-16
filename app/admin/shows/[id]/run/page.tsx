@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { shows, contestants, judges, judgeVotes } from "@/lib/schema";
 import { RunControls } from "./run-controls";
 import { AudiencePanel } from "./audience-panel";
+import { ShowTitle } from "@/app/components/show-title";
+import { StatusBadge } from "@/app/components/status-badge";
 
 export default async function RunPage({
   params,
@@ -43,53 +45,60 @@ export default async function RunPage({
       : [];
 
   return (
-    <main className="mx-auto max-w-4xl p-8">
-      <h1 className="text-2xl font-semibold">{show.name}</h1>
-
-      <div className="mt-6 flex flex-wrap gap-3">
-        {showContestants.map((c) => (
-          <div
-            key={c.id}
-            className={`rounded-lg border px-4 py-3 text-sm ${
-              c.id === show.currentContestantId
-                ? "border-zinc-900 dark:border-zinc-50"
-                : "border-zinc-200 dark:border-zinc-800"
-            }`}
-          >
-            <div className="font-medium">{c.startupName}</div>
-            <div className="text-zinc-500">{c.status}</div>
-          </div>
-        ))}
-      </div>
-
-      {show.status === "live" &&
-        (current ? (
-          <RunControls
-            showId={id}
-            contestant={current}
-            judges={showJudges}
-            votes={votes}
-            isLastContestant={isLastContestant}
-          />
-        ) : (
-          <p className="mt-8 text-zinc-500">No current contestant.</p>
-        ))}
-
-      {show.status === "audience" && (
-        <AudiencePanel showId={id} audienceBonusConfirmed={show.audienceBonusConfirmed} />
-      )}
-
-      {show.status === "complete" && (
-        <div className="mt-8 rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
-          <h2 className="text-xl font-semibold">Show complete</h2>
-          <Link
-            href={`/results/${show.slug}`}
-            className="mt-3 inline-block text-blue-600 underline dark:text-blue-400"
-          >
-            View results
-          </Link>
+    <main className="min-h-screen bg-navy p-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="flex items-center justify-between gap-3">
+          <ShowTitle size="sm" name={show.name} />
+          <StatusBadge status={show.status} />
         </div>
-      )}
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          {showContestants.map((c) => (
+            <div
+              key={c.id}
+              className={`rounded-lg border px-4 py-3 text-sm ${
+                c.id === show.currentContestantId ? "border-gold" : "border-line"
+              }`}
+            >
+              <div className="font-display uppercase tracking-[0.02em] text-white">
+                {c.startupName}
+              </div>
+              <div className="font-serif text-lavender">{c.status}</div>
+            </div>
+          ))}
+        </div>
+
+        {show.status === "live" &&
+          (current ? (
+            <RunControls
+              showId={id}
+              contestant={current}
+              judges={showJudges}
+              votes={votes}
+              isLastContestant={isLastContestant}
+            />
+          ) : (
+            <p className="mt-8 font-serif text-lavender">No current contestant.</p>
+          ))}
+
+        {show.status === "audience" && (
+          <AudiencePanel showId={id} audienceBonusConfirmed={show.audienceBonusConfirmed} />
+        )}
+
+        {show.status === "complete" && (
+          <div className="mt-8 rounded-xl border border-line bg-panel p-6">
+            <h2 className="font-display text-xl uppercase tracking-[0.02em] text-white">
+              Show complete
+            </h2>
+            <Link
+              href={`/results/${show.slug}`}
+              className="mt-3 inline-block font-serif text-gold underline"
+            >
+              View results
+            </Link>
+          </div>
+        )}
+      </div>
     </main>
   );
 }

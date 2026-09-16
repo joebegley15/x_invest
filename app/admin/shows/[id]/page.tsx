@@ -5,6 +5,8 @@ import { requireAdmin } from "@/lib/access";
 import { db } from "@/lib/db";
 import { shows, judges, contestants } from "@/lib/schema";
 import { ShowNameForm, StartShowForm, JudgesForm, ContestantsForm } from "./forms";
+import { ShowTitle } from "@/app/components/show-title";
+import { StatusBadge } from "@/app/components/status-badge";
 
 export default async function ShowPage({
   params,
@@ -30,53 +32,58 @@ export default async function ShowPage({
   const isSetup = show.status === "setup";
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <p className="text-sm text-zinc-500">Status: {show.status}</p>
+    <main className="min-h-screen bg-navy p-8">
+      <div className="mx-auto max-w-3xl">
+        <ShowTitle size="sm" name={show.name} />
 
-      <ShowNameForm showId={show.id} initialName={show.name} />
+        <div className="mt-6 flex items-center gap-3">
+          <StatusBadge status={show.status} />
+        </div>
 
-      {isSetup ? (
-        <StartShowForm showId={show.id} />
-      ) : (
-        <Link
-          href={`/admin/shows/${show.id}/run`}
-          className="mt-4 inline-block text-blue-600 underline dark:text-blue-400"
-        >
-          Go to run screen
-        </Link>
-      )}
+        <ShowNameForm showId={show.id} initialName={show.name} />
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold">Judges</h2>
-        <JudgesForm
-          showId={show.id}
-          initialText={showJudges.map((j) => j.name).join("\n")}
-          readOnly={!isSetup}
-        />
-        {showJudges.length > 0 && (
-          <ul className="mt-4 flex flex-col gap-1 text-sm">
-            {showJudges.map((j) => (
-              <li key={j.id}>
-                <a
-                  href={`/judge/${j.slug}`}
-                  className="text-blue-600 underline dark:text-blue-400"
-                >
-                  {`/judge/${j.slug}`}
-                </a>
-              </li>
-            ))}
-          </ul>
+        {isSetup ? (
+          <StartShowForm showId={show.id} />
+        ) : (
+          <Link
+            href={`/admin/shows/${show.id}/run`}
+            className="mt-4 inline-block font-serif text-gold underline"
+          >
+            Go to run screen
+          </Link>
         )}
-      </section>
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold">Contestants</h2>
-        <ContestantsForm
-          showId={show.id}
-          initialText={showContestants.map((c) => c.startupName).join("\n")}
-          readOnly={!isSetup}
-        />
-      </section>
+        <section className="mt-8 rounded-xl border border-line bg-panel p-6">
+          <h2 className="font-display text-lg uppercase tracking-[0.02em] text-white">Judges</h2>
+          <JudgesForm
+            showId={show.id}
+            initialText={showJudges.map((j) => j.name).join("\n")}
+            readOnly={!isSetup}
+          />
+          {showJudges.length > 0 && (
+            <ul className="mt-4 flex flex-col gap-1 text-sm">
+              {showJudges.map((j) => (
+                <li key={j.id}>
+                  <a href={`/judge/${j.slug}`} className="font-serif text-gold underline">
+                    {`/judge/${j.slug}`}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="mt-8 rounded-xl border border-line bg-panel p-6">
+          <h2 className="font-display text-lg uppercase tracking-[0.02em] text-white">
+            Contestants
+          </h2>
+          <ContestantsForm
+            showId={show.id}
+            initialText={showContestants.map((c) => c.startupName).join("\n")}
+            readOnly={!isSetup}
+          />
+        </section>
+      </div>
     </main>
   );
 }

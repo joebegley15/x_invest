@@ -5,8 +5,8 @@ import { judgePointsByContestant, computeScores, findOverallWinner } from "@/lib
 import { AudienceBonusForm, ConfirmWinnerForm } from "./audience-forms";
 
 const audienceBonusClasses: Record<number, string> = {
-  1: "text-yellow-600 dark:text-yellow-400 font-semibold",
-  2: "text-green-600 dark:text-green-400 font-semibold",
+  1: "text-lavender font-semibold",
+  2: "text-gold font-semibold",
 };
 
 export async function AudiencePanel({
@@ -24,9 +24,11 @@ export async function AudiencePanel({
 
   if (!audienceBonusConfirmed) {
     return (
-      <div className="mt-8 rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
-        <h2 className="text-xl font-semibold">Audience vote</h2>
-        <p className="mt-1 text-sm text-zinc-500">
+      <div className="mt-8 rounded-xl border border-line bg-panel p-6">
+        <h2 className="font-display text-xl uppercase tracking-[0.02em] text-white">
+          Audience vote
+        </h2>
+        <p className="mt-1 font-serif text-sm text-lavender">
           Split 2 points across the startups based on the audience response.
         </p>
         <AudienceBonusForm showId={showId} contestants={showContestants} />
@@ -48,9 +50,11 @@ export async function AudiencePanel({
   const byId = new Map(showContestants.map((c) => [c.id, c]));
 
   return (
-    <div className="mt-8 rounded-xl border border-zinc-200 p-6 dark:border-zinc-800">
-      <h2 className="text-xl font-semibold">Overall results</h2>
-      <ul className="mt-3 flex flex-col gap-1 text-sm">
+    <div className="mt-8 rounded-xl border border-line bg-panel p-6">
+      <h2 className="font-display text-xl uppercase tracking-[0.02em] text-white">
+        Overall results
+      </h2>
+      <ul className="mt-3 flex flex-col gap-1 font-serif text-sm text-ice">
         {scores.map((s) => (
           <li key={s.contestantId}>
             {byId.get(s.contestantId)?.startupName}: {s.judgePoints} judge +{" "}
@@ -68,9 +72,7 @@ export async function AudiencePanel({
         />
       ) : (
         <div className="mt-4">
-          <p className="text-sm text-zinc-500">
-            Tied for the win. Pick the winner:
-          </p>
+          <p className="font-serif text-sm text-lavender">Tied for the win. Pick the winner:</p>
           <div className="mt-2 flex flex-wrap gap-3">
             {overall.tied.map((id) => {
               const contestant = byId.get(id)!;

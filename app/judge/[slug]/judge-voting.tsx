@@ -3,6 +3,15 @@
 import { useEffect, useState, useTransition } from "react";
 import { castVote, fetchJudgeState } from "./actions";
 import type { JudgeState } from "@/lib/judge-state";
+import { Starfield } from "@/app/components/starfield";
+import { ShowTitle } from "@/app/components/show-title";
+import { Label } from "@/app/components/label";
+
+const statusLine: Record<"neutral" | "red" | "green", string> = {
+  neutral: "No vote yet",
+  red: "You voted out",
+  green: "You voted in",
+};
 
 export function JudgeVoting({ slug, initialState }: { slug: string; initialState: JudgeState }) {
   const [state, setState] = useState<JudgeState>(initialState);
@@ -15,17 +24,26 @@ export function JudgeVoting({ slug, initialState }: { slug: string; initialState
     return () => clearInterval(interval);
   }, [slug]);
 
-  if (state.phase === "no-show") {
-    return <Message text="No show is live right now." />;
+  if (state.phase === "no-show" || state.phase === "not-judge") {
+    return (
+      <Shell showName={state.phase === "not-judge" ? state.showName : undefined}>
+        <p className="font-serif text-lg text-ice">
+          Hang tight. Voting opens when the show starts.
+        </p>
+      </Shell>
+    );
   }
-  if (state.phase === "not-judge") {
-    return <Message text="You are not listed as a judge for this show." />;
-  }
+
   if (state.phase === "no-contestant") {
-    return <Message text="Waiting for the show to start." />;
+    return (
+      <Shell showName={state.showName} judgeName={state.judgeName}>
+        <p className="font-serif text-lg text-ice">Voting opens soon.</p>
+      </Shell>
+    );
   }
 
   const clickable = state.status === "voting";
+  const locked = state.status === "revealed";
 
   function handleTap(tapped: "red" | "green") {
     if (!clickable || state.phase !== "contestant") return;
@@ -40,46 +58,91 @@ export function JudgeVoting({ slug, initialState }: { slug: string; initialState
     });
   }
 
+  if (state.status === "waiting") {
+    return (
+      <Shell showName={state.showName} judgeName={state.judgeName}>
+        <Label className="text-sm">Now pitching</Label>
+        <p className="font-display text-3xl uppercase tracking-[0.02em] text-white sm:text-4xl">
+          {state.contestantName}
+        </p>
+        <p className="font-serif text-lg text-ice">Voting opens soon.</p>
+      </Shell>
+    );
+  }
+
+  const selectedRed = state.vote === "red";
+  const selectedGreen = state.vote === "green";
+  const noneSelected = state.vote === "neutral";
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-black p-6 text-center">
-      <p className="text-xl text-zinc-300">{state.contestantName}</p>
-      <p className="text-sm uppercase tracking-wide text-zinc-500">
-        {state.status === "waiting" && "Get ready"}
-        {state.status === "voting" && "Tap to vote"}
-        {state.status === "revealed" && "Locked in"}
+    <Shell showName={state.showName} judgeName={state.judgeName}>
+      <Label className="text-sm">Now pitching</Label>
+      <p className="font-display text-3xl uppercase tracking-[0.02em] text-white sm:text-4xl">
+        {state.contestantName}
       </p>
+      <p className="font-serif text-lg text-ice">{statusLine[state.vote]}</p>
+
       <div className="flex w-full max-w-xl flex-row gap-4">
         <button
           type="button"
           onClick={() => handleTap("red")}
           disabled={!clickable}
-          aria-pressed={state.vote === "red"}
-          className={`h-40 flex-1 rounded-2xl bg-red-600 text-2xl font-bold text-white transition-opacity ${
-            state.vote === "red" ? "border-8 border-white" : "border-8 border-transparent"
-          } ${clickable ? "" : "opacity-60"}`}
+          aria-pressed={selectedRed}
+          aria-label="Vote out"
+          className={`h-40 flex-1 rounded-2xl border-[5px] bg-vote-out font-display text-3xl uppercase tracking-[0.02em] text-navy transition-transform duration-150 active:scale-95 motion-reduce:transition-none ${
+            selectedRed
+              ? "border-white opacity-100"
+              : noneSelected
+                ? "border-transparent opacity-100"
+                : "border-transparent opacity-45"
+          }`}
         >
-          RED
+          Out
         </button>
         <button
           type="button"
           onClick={() => handleTap("green")}
           disabled={!clickable}
-          aria-pressed={state.vote === "green"}
-          className={`h-40 flex-1 rounded-2xl bg-[#4fbf85] text-2xl font-bold text-white transition-opacity ${
-            state.vote === "green" ? "border-8 border-white" : "border-8 border-transparent"
-          } ${clickable ? "" : "opacity-60"}`}
+          aria-pressed={selectedGreen}
+          aria-label="Vote in"
+          className={`h-40 flex-1 rounded-2xl border-[5px] bg-vote-in font-display text-3xl uppercase tracking-[0.02em] text-navy transition-transform duration-150 active:scale-95 motion-reduce:transition-none ${
+            selectedGreen
+              ? "border-white opacity-100"
+              : noneSelected
+                ? "border-transparent opacity-100"
+                : "border-transparent opacity-45"
+          }`}
         >
-          GREEN
+          In
         </button>
       </div>
-    </div>
+
+      <p className="font-serif text-sm text-lavender">
+        {locked ? "Your vote is locked." : "Votes lock when Joe counts down."}
+      </p>
+    </Shell>
   );
 }
 
-function Message({ text }: { text: string }) {
+function Shell({
+  showName,
+  judgeName,
+  children,
+}: {
+  showName?: string;
+  judgeName?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black p-6 text-center text-xl text-zinc-300">
-      {text}
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-navy">
+      <Starfield />
+      <div className="relative z-10 flex items-center justify-between gap-3 px-4 py-4">
+        <ShowTitle size="sm" name={showName} />
+        {judgeName && <Label className="text-xs">Judge {judgeName}</Label>}
+      </div>
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-10 text-center">
+        {children}
+      </div>
     </div>
   );
 }

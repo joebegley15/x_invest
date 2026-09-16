@@ -3,6 +3,8 @@
 import { useActionState, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { login } from "./actions";
+import { Starfield } from "@/app/components/starfield";
+import { ShowTitle } from "@/app/components/show-title";
 
 type Role = "admin" | "judge";
 
@@ -14,15 +16,13 @@ function LoginForm() {
   const [state, formAction, pending] = useActionState(login, undefined);
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex rounded-lg border border-zinc-300 p-1 dark:border-zinc-700">
+    <div className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-line bg-panel p-6">
+      <div className="flex rounded-lg border border-line p-1">
         <button
           type="button"
           onClick={() => setRole("admin")}
-          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            role === "admin"
-              ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
-              : "text-zinc-500"
+          className={`flex-1 rounded-md px-3 py-2 font-display text-sm uppercase tracking-[0.02em] transition-colors ${
+            role === "admin" ? "bg-gold text-navy" : "text-lavender"
           }`}
         >
           Admin
@@ -30,10 +30,8 @@ function LoginForm() {
         <button
           type="button"
           onClick={() => setRole("judge")}
-          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            role === "judge"
-              ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
-              : "text-zinc-500"
+          className={`flex-1 rounded-md px-3 py-2 font-display text-sm uppercase tracking-[0.02em] transition-colors ${
+            role === "judge" ? "bg-gold text-navy" : "text-lavender"
           }`}
         >
           Judge
@@ -41,7 +39,7 @@ function LoginForm() {
       </div>
 
       <form action={formAction} className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">
+        <h1 className="font-display text-2xl uppercase tracking-[0.02em] text-white">
           {role === "admin" ? "Admin login" : "Judge login"}
         </h1>
         <input type="hidden" name="role" value={role} />
@@ -53,13 +51,13 @@ function LoginForm() {
           placeholder="Password"
           required
           autoFocus
-          className="rounded-lg border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950"
+          className="rounded-lg border border-line bg-navy px-3 py-2 text-ice placeholder:text-lavender focus:outline-none focus:ring-2 focus:ring-gold"
         />
-        {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+        {state?.error && <p className="text-sm text-vote-out">{state.error}</p>}
         <button
           type="submit"
           disabled={pending}
-          className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+          className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
         >
           {pending ? "Checking..." : "Enter"}
         </button>
@@ -70,10 +68,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 p-8 dark:bg-black">
-      <Suspense>
-        <LoginForm />
-      </Suspense>
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden bg-navy p-8">
+      <Starfield />
+      <div className="relative z-10 flex w-full flex-col items-center gap-8">
+        <ShowTitle size="sm" />
+        <Suspense>
+          <LoginForm />
+        </Suspense>
+      </div>
     </main>
   );
 }
