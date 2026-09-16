@@ -89,7 +89,10 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
       >
         {state.contestantName}
       </p>
-      <div className="flex w-full max-w-5xl flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-center">
+      <div
+        className="flex w-full max-w-5xl flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-center"
+        style={{ fontSize: "clamp(1.5rem, 4vw, 3rem)" }}
+      >
         {state.judges.map((j) => (
           <div
             key={j.id}
