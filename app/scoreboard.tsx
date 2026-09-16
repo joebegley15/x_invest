@@ -7,16 +7,22 @@ export function Scoreboard({
   rows,
   winnerContestantId,
   titleSize = "sm",
+  showTitle = true,
 }: {
   showName?: string;
   rows: ScoreboardRow[];
   winnerContestantId: number | null;
   titleSize?: "lg" | "sm";
+  showTitle?: boolean;
 }) {
   return (
     <div className="flex w-full max-w-2xl flex-col items-center gap-3">
-      <ShowTitle size={titleSize} name={showName} />
-      <p className="font-serif text-base text-ice sm:text-lg">Final results</p>
+      {showTitle && (
+        <>
+          <ShowTitle size={titleSize} name={showName} />
+          <p className="font-serif text-base text-ice sm:text-lg">Final results</p>
+        </>
+      )}
 
       <div className="grid w-full grid-cols-[2fr_1fr_1fr_1fr] gap-2 px-2">
         <Label className="text-xs sm:text-sm">Startup</Label>
