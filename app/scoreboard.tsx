@@ -16,7 +16,7 @@ export function Scoreboard({
   showTitle?: boolean;
 }) {
   return (
-    <div className="flex w-full max-w-2xl flex-col items-center gap-3">
+    <div className="flex w-full max-w-3xl flex-col items-center gap-3">
       {showTitle && (
         <>
           <ShowTitle size={titleSize} name={showName} />
@@ -24,9 +24,10 @@ export function Scoreboard({
         </>
       )}
 
-      <div className="grid w-full grid-cols-[2fr_1fr_1fr_1fr] gap-2 px-2">
+      <div className="grid w-full grid-cols-[minmax(0,2.4fr)_minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1.3fr)_minmax(0,1fr)] gap-2 px-2">
         <Label className="text-xs sm:text-sm">Startup</Label>
-        <Label className="text-center text-xs sm:text-sm">Judges</Label>
+        <Label className="text-center text-xs sm:text-sm">Yays</Label>
+        <Label className="text-center text-xs sm:text-sm">Favorites</Label>
         <Label className="text-center text-xs sm:text-sm">Audience</Label>
         <Label className="text-center text-xs sm:text-sm">Total</Label>
       </div>
@@ -37,7 +38,7 @@ export function Scoreboard({
           return (
             <div
               key={row.contestantId}
-              className={`grid grid-cols-[2fr_1fr_1fr_1fr] items-center gap-2 rounded-xl border px-3 py-2 sm:px-4 ${
+              className={`grid grid-cols-[minmax(0,2.4fr)_minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1.3fr)_minmax(0,1fr)] items-center gap-2 rounded-xl border px-3 py-2 sm:px-4 ${
                 isWinner ? "border-gold bg-gold" : "border-line bg-transparent"
               }`}
             >
@@ -56,7 +57,10 @@ export function Scoreboard({
                 )}
               </div>
               <span className={`text-center font-display ${isWinner ? "text-navy" : "text-ice"}`}>
-                {row.judgePoints}
+                {row.yayPoints}
+              </span>
+              <span className={`text-center font-display ${isWinner ? "text-navy" : "text-ice"}`}>
+                {row.favoritePoints}
               </span>
               <span className={`text-center font-display ${isWinner ? "text-navy" : "text-ice"}`}>
                 {row.audienceBonus}

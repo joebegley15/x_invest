@@ -18,6 +18,8 @@ export const shows = pgTable("shows", {
   audienceBonusConfirmed: boolean("audience_bonus_confirmed").notNull().default(false),
   winnerContestantId: integer("winner_contestant_id")
     .references((): AnyPgColumn => contestants.id, { onDelete: "set null" }),
+  favoritesOpenedAt: timestamp("favorites_opened_at", { withTimezone: true }),
+  favoritesRevealedAt: timestamp("favorites_revealed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -26,6 +28,8 @@ export const judges = pgTable("judges", {
   showId: integer("show_id").notNull().references(() => shows.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   slug: text("slug").notNull(),
+  favoriteContestantId: integer("favorite_contestant_id")
+    .references((): AnyPgColumn => contestants.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [unique().on(t.showId, t.slug)]);
 

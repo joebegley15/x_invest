@@ -1,7 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
-import { openVoting, revealVotes, reopenVoting, nextContestant, moveToAudience } from "./actions";
+import { useActionState, useEffect, useState } from "react";
+import {
+  openVoting,
+  revealVotes,
+  reopenVoting,
+  nextContestant,
+  moveToAudience,
+  openFavorites,
+  revealFavorites,
+  getFavoritesProgress,
+} from "./actions";
 import SummitFlag from "@/app/components/SummitFlag";
 import type { VoteValue } from "@/lib/vote";
 
@@ -20,18 +29,26 @@ export function RunControls({
   judges,
   votes,
   isLastContestant,
+  favoritesOpened,
+  favoritesRevealed,
+  favoritesPicked,
 }: {
   showId: number;
   contestant: Contestant;
   judges: Judge[];
   votes: Vote[];
   isLastContestant: boolean;
+  favoritesOpened: boolean;
+  favoritesRevealed: boolean;
+  favoritesPicked: number;
 }) {
   const [openState, openAction, openPending] = useActionState(openVoting, undefined);
   const [revealState, revealAction, revealPending] = useActionState(revealVotes, undefined);
   const [reopenState, reopenAction, reopenPending] = useActionState(reopenVoting, undefined);
   const [nextState, nextAction, nextPending] = useActionState(nextContestant, undefined);
   const [audienceState, audienceAction, audiencePending] = useActionState(moveToAudience, undefined);
+  const [openFavState, openFavAction, openFavPending] = useActionState(openFavorites, undefined);
+  const [revealFavState, revealFavAction, revealFavPending] = useActionState(revealFavorites, undefined);
 
   const voteByJudge = new Map(votes.map((v) => [v.judgeId, v.value]));
   const points = votes.filter((v) => v.value === "green").length;
@@ -94,20 +111,53 @@ export function RunControls({
             </div>
           </div>
           <div className="mt-4 flex flex-wrap items-start gap-3">
-            <form action={reopenAction}>
-              <input type="hidden" name="showId" value={showId} />
-              <input type="hidden" name="contestantId" value={contestant.id} />
-              <button
-                type="submit"
-                disabled={reopenPending}
-                className="rounded-lg border border-line px-4 py-2 font-display uppercase tracking-[0.02em] text-ice disabled:opacity-50"
-              >
-                {reopenPending ? "Reopening..." : "Reopen voting"}
-              </button>
-              {reopenState?.error && <p className="mt-2 text-sm text-vote-out">{reopenState.error}</p>}
-            </form>
+            {!favoritesOpened && (
+              <form action={reopenAction}>
+                <input type="hidden" name="showId" value={showId} />
+                <input type="hidden" name="contestantId" value={contestant.id} />
+                <button
+                  type="submit"
+                  disabled={reopenPending}
+                  className="rounded-lg border border-line px-4 py-2 font-display uppercase tracking-[0.02em] text-ice disabled:opacity-50"
+                >
+                  {reopenPending ? "Reopening..." : "Reopen voting"}
+                </button>
+                {reopenState?.error && <p className="mt-2 text-sm text-vote-out">{reopenState.error}</p>}
+              </form>
+            )}
 
-            {isLastContestant ? (
+            {isLastContestant && !favoritesOpened && (
+              <form action={openFavAction}>
+                <input type="hidden" name="showId" value={showId} />
+                <button
+                  type="submit"
+                  disabled={openFavPending}
+                  className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
+                >
+                  {openFavPending ? "Opening..." : "Open favorite voting"}
+                </button>
+                {openFavState?.error && <p className="mt-2 text-sm text-vote-out">{openFavState.error}</p>}
+              </form>
+            )}
+
+            {isLastContestant && favoritesOpened && !favoritesRevealed && (
+              <div className="flex flex-col gap-3">
+                <FavoritesProgress showId={showId} initialPicked={favoritesPicked} totalJudges={judges.length} />
+                <form action={revealFavAction}>
+                  <input type="hidden" name="showId" value={showId} />
+                  <button
+                    type="submit"
+                    disabled={revealFavPending}
+                    className="rounded-lg bg-gold px-4 py-2 font-display uppercase tracking-[0.02em] text-navy disabled:opacity-50"
+                  >
+                    {revealFavPending ? "Revealing..." : "Reveal favorites"}
+                  </button>
+                  {revealFavState?.error && <p className="mt-2 text-sm text-vote-out">{revealFavState.error}</p>}
+                </form>
+              </div>
+            )}
+
+            {isLastContestant && favoritesRevealed && (
               <form action={audienceAction}>
                 <input type="hidden" name="showId" value={showId} />
                 <button
@@ -119,7 +169,9 @@ export function RunControls({
                 </button>
                 {audienceState?.error && <p className="mt-2 text-sm text-vote-out">{audienceState.error}</p>}
               </form>
-            ) : (
+            )}
+
+            {!isLastContestant && (
               <form action={nextAction}>
                 <input type="hidden" name="showId" value={showId} />
                 <button
@@ -136,5 +188,32 @@ export function RunControls({
         </>
       )}
     </div>
+  );
+}
+
+function FavoritesProgress({
+  showId,
+  initialPicked,
+  totalJudges,
+}: {
+  showId: number;
+  initialPicked: number;
+  totalJudges: number;
+}) {
+  const [picked, setPicked] = useState(initialPicked);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getFavoritesProgress(showId)
+        .then((p) => setPicked(p.picked))
+        .catch(() => {});
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [showId]);
+
+  return (
+    <p className="font-display uppercase tracking-[0.02em] text-gold">
+      Favorite voting open: {picked} of {totalJudges} picked
+    </p>
   );
 }

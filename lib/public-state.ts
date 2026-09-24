@@ -2,17 +2,26 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { shows, judges, contestants, judgeVotes } from "@/lib/schema";
 import { getScoreboard, type ScoreboardRow } from "@/lib/results";
-import { judgePointsByContestant, computeScores } from "@/lib/scoring";
+import { favoritePoints } from "@/lib/scoring";
 import type { VoteValue } from "./vote";
 
 export type AudienceCardState = {
   contestantId: number;
   position: number;
   startupName: string;
-  judgePoints: number;
+  yayPoints: number;
+  favoritePoints: number;
   totalJudges: number;
   audienceBonus: number;
   total: number;
+};
+
+export type FavoriteCardState = {
+  contestantId: number;
+  position: number;
+  startupName: string;
+  /** Always 0 until favorites are revealed, so the public payload never leaks who picked whom. */
+  favorites: number;
 };
 
 export type PublicState =
@@ -27,6 +36,7 @@ export type PublicState =
       status: "waiting" | "voting" | "revealed";
       judges: { id: number; name: string; vote: VoteValue }[];
     }
+  | { phase: "favorites"; showName: string; revealed: boolean; contestants: FavoriteCardState[] }
   | {
       phase: "audience";
       showName: string;
@@ -44,51 +54,28 @@ export async function getPublicState(): Promise<PublicState> {
   if (!show) return { phase: "no-show" };
 
   if (show.status === "audience") {
-    const showContestants = await db
-      .select({
-        id: contestants.id,
-        startupName: contestants.startupName,
-        position: contestants.position,
-        audienceBonusPoints: contestants.audienceBonusPoints,
-      })
-      .from(contestants)
-      .where(eq(contestants.showId, show.id))
-      .orderBy(contestants.position);
+    const scoreboard = await getScoreboard(show.id);
+    const rows = [...(scoreboard?.rows ?? [])].sort((x, y) => x.position - y.position);
 
     const showJudges = await db
       .select({ id: judges.id })
       .from(judges)
       .where(eq(judges.showId, show.id));
 
-    const contestantIds = showContestants.map((c) => c.id);
-    const votes = contestantIds.length
-      ? await db
-          .select({ contestantId: judgeVotes.contestantId, value: judgeVotes.value })
-          .from(judgeVotes)
-          .where(inArray(judgeVotes.contestantId, contestantIds))
-      : [];
-
-    const judgePoints = judgePointsByContestant(votes);
-    const audienceBonus = new Map(showContestants.map((c) => [c.id, c.audienceBonusPoints]));
-    const scores = computeScores(contestantIds, judgePoints, audienceBonus);
-    const scoreByContestantId = new Map(scores.map((s) => [s.contestantId, s]));
-
     return {
       phase: "audience",
       showName: show.name,
       bonusConfirmed: show.audienceBonusConfirmed,
-      contestants: showContestants.map((c) => {
-        const score = scoreByContestantId.get(c.id)!;
-        return {
-          contestantId: c.id,
-          position: c.position,
-          startupName: c.startupName,
-          judgePoints: score.judgePoints,
-          totalJudges: showJudges.length,
-          audienceBonus: score.audienceBonus,
-          total: score.total,
-        };
-      }),
+      contestants: rows.map((r) => ({
+        contestantId: r.contestantId,
+        position: r.position,
+        startupName: r.startupName,
+        yayPoints: r.yayPoints,
+        favoritePoints: r.favoritePoints,
+        totalJudges: showJudges.length,
+        audienceBonus: r.audienceBonus,
+        total: r.total,
+      })),
     };
   }
 
@@ -99,6 +86,32 @@ export async function getPublicState(): Promise<PublicState> {
       showName: show.name,
       rows: scoreboard?.rows ?? [],
       winnerContestantId: show.winnerContestantId,
+    };
+  }
+
+  if (show.favoritesOpenedAt) {
+    const showContestants = await db
+      .select()
+      .from(contestants)
+      .where(eq(contestants.showId, show.id))
+      .orderBy(contestants.position);
+    const revealed = show.favoritesRevealedAt !== null;
+    const picks = revealed
+      ? (await db.select({ favoriteContestantId: judges.favoriteContestantId }).from(judges).where(eq(judges.showId, show.id))).map(
+          (j) => j.favoriteContestantId
+        )
+      : [];
+
+    return {
+      phase: "favorites",
+      showName: show.name,
+      revealed,
+      contestants: showContestants.map((c) => ({
+        contestantId: c.id,
+        position: c.position,
+        startupName: c.startupName,
+        favorites: favoritePoints(c.id, picks),
+      })),
     };
   }
 

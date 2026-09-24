@@ -8,6 +8,8 @@ import { RunControls } from "./run-controls";
 import { AudiencePanel } from "./audience-panel";
 import { ShowTitle } from "@/app/components/show-title";
 import { StatusBadge } from "@/app/components/status-badge";
+import { StepBackButton } from "./step-back-button";
+import { ResetShowButton } from "../reset-show-button";
 
 export default async function RunPage({
   params,
@@ -52,6 +54,11 @@ export default async function RunPage({
           <StatusBadge status={show.status} />
         </div>
 
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <StepBackButton showId={id} />
+          <ResetShowButton showId={id} />
+        </div>
+
         <div className="mt-6 flex flex-wrap gap-3">
           {showContestants.map((c) => (
             <div
@@ -73,9 +80,12 @@ export default async function RunPage({
             <RunControls
               showId={id}
               contestant={current}
-              judges={showJudges}
+              judges={showJudges.map((j) => ({ id: j.id, name: j.name }))}
               votes={votes}
               isLastContestant={isLastContestant}
+              favoritesOpened={show.favoritesOpenedAt !== null}
+              favoritesRevealed={show.favoritesRevealedAt !== null}
+              favoritesPicked={showJudges.filter((j) => j.favoriteContestantId !== null).length}
             />
           ) : (
             <p className="mt-8 font-serif text-lavender">No current contestant.</p>

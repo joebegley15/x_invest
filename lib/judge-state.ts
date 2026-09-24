@@ -3,10 +3,21 @@ import { db } from "@/lib/db";
 import { shows, judges, contestants, judgeVotes } from "@/lib/schema";
 import type { VoteValue } from "./vote";
 
+export type FavoriteOption = { id: number; position: number; startupName: string };
+
 export type JudgeState =
   | { phase: "no-show" }
   | { phase: "not-judge"; showName: string }
   | { phase: "no-contestant"; showName: string; judgeName: string }
+  | {
+      phase: "favorites";
+      judgeId: number;
+      showName: string;
+      judgeName: string;
+      contestants: FavoriteOption[];
+      pickedContestantId: number | null;
+      locked: boolean;
+    }
   | {
       phase: "contestant";
       judgeId: number;
@@ -27,6 +38,23 @@ export async function getJudgeState(slug: string): Promise<JudgeState> {
     .from(judges)
     .where(and(eq(judges.showId, show.id), eq(judges.slug, slug)));
   if (!judge) return { phase: "not-judge", showName: show.name };
+
+  if (show.favoritesOpenedAt) {
+    const options = await db
+      .select({ id: contestants.id, position: contestants.position, startupName: contestants.startupName })
+      .from(contestants)
+      .where(eq(contestants.showId, show.id))
+      .orderBy(contestants.position);
+    return {
+      phase: "favorites",
+      judgeId: judge.id,
+      showName: show.name,
+      judgeName: judge.name,
+      contestants: options,
+      pickedContestantId: judge.favoriteContestantId,
+      locked: show.favoritesRevealedAt !== null,
+    };
+  }
 
   if (!show.currentContestantId) return { phase: "no-contestant", showName: show.name, judgeName: judge.name };
 

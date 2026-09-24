@@ -6,6 +6,7 @@ import { Scoreboard } from "./scoreboard";
 import { Stage } from "./components/stage";
 import SummitFlag from "./components/SummitFlag";
 import { AudienceCard } from "./components/audience-card";
+import { FavoriteCard } from "./components/favorite-card";
 
 export function LiveDisplay({ initialState }: { initialState: PublicState }) {
   const [state, setState] = useState<PublicState>(initialState);
@@ -34,6 +35,20 @@ export function LiveDisplay({ initialState }: { initialState: PublicState }) {
 
   if (state.phase === "no-contestant") {
     return <Stage showName={state.showName} label="Starting soon" />;
+  }
+
+  if (state.phase === "favorites") {
+    return (
+      <Stage showName={state.showName} label="Judge favorites" itemCount={state.contestants.length}>
+        <Centered>
+          <div className="flex items-center justify-center gap-4 sm:gap-6">
+            {state.contestants.map((c) => (
+              <FavoriteCard key={c.contestantId} data={c} revealed={state.revealed} />
+            ))}
+          </div>
+        </Centered>
+      </Stage>
+    );
   }
 
   if (state.phase === "audience") {

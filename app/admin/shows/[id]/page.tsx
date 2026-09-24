@@ -7,6 +7,7 @@ import { shows, judges, contestants } from "@/lib/schema";
 import { ShowNameForm, StartShowForm, JudgesForm, ContestantsForm } from "./forms";
 import { ShowTitle } from "@/app/components/show-title";
 import { StatusBadge } from "@/app/components/status-badge";
+import { ResetShowButton } from "./reset-show-button";
 
 export default async function ShowPage({
   params,
@@ -36,8 +37,9 @@ export default async function ShowPage({
       <div className="mx-auto max-w-3xl">
         <ShowTitle size="sm" name={show.name} />
 
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-6 flex items-center justify-between gap-3">
           <StatusBadge status={show.status} />
+          <ResetShowButton showId={show.id} />
         </div>
 
         <ShowNameForm showId={show.id} initialName={show.name} />

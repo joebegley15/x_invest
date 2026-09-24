@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/access";
 import { db } from "@/lib/db";
-import { shows, judges, contestants } from "@/lib/schema";
+import { shows, judges, contestants, judgeVotes } from "@/lib/schema";
 import { slugifyJudge } from "@/lib/slug";
+import { broadcastLiveState } from "@/lib/live-broadcast";
 
 export type ActionState = { error?: string } | undefined;
 
@@ -89,6 +90,39 @@ export async function saveJudges(_prev: ActionState, formData: FormData): Promis
 
   revalidatePath(`/admin/shows/${id}`);
   return undefined;
+}
+
+export async function resetShow(formData: FormData): Promise<void> {
+  await requireAdmin();
+
+  const id = Number(formData.get("showId"));
+  if (!Number.isInteger(id)) return;
+
+  const show = await findShow(id);
+  if (!show) return;
+
+  await db.delete(judgeVotes).where(eq(judgeVotes.showId, id));
+  await db.update(judges).set({ favoriteContestantId: null }).where(eq(judges.showId, id));
+  await db
+    .update(contestants)
+    .set({ status: "waiting", audienceBonusPoints: 0 })
+    .where(eq(contestants.showId, id));
+  await db
+    .update(shows)
+    .set({
+      status: "setup",
+      currentContestantId: null,
+      audienceBonusConfirmed: false,
+      winnerContestantId: null,
+      favoritesOpenedAt: null,
+      favoritesRevealedAt: null,
+    })
+    .where(eq(shows.id, id));
+
+  revalidatePath(`/admin/shows/${id}`);
+  revalidatePath(`/admin/shows/${id}/run`);
+  await broadcastLiveState();
+  redirect(`/admin/shows/${id}`);
 }
 
 export async function saveContestants(_prev: ActionState, formData: FormData): Promise<ActionState> {

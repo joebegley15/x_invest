@@ -9,18 +9,33 @@ export type TieResult = { winnerId: number | null; tied: number[] };
 
 export type ContestantScore = {
   contestantId: number;
-  judgePoints: number;
+  yayPoints: number;
+  favoritePoints: number;
   audienceBonus: number;
   total: number;
 };
 
-export function judgePointsByContestant(votes: JudgeVote[]): Map<number, number> {
-  const points = new Map<number, number>();
-  for (const v of votes) {
-    if (v.value !== "green") continue;
-    points.set(v.contestantId, (points.get(v.contestantId) ?? 0) + 1);
-  }
-  return points;
+/** One point per judge who voted IN (green) on this contestant. */
+export function yayPoints(contestantId: number, votes: JudgeVote[]): number {
+  return votes.filter((v) => v.contestantId === contestantId && v.value === "green").length;
+}
+
+/** One point per judge whose favorite pick is this contestant. Null means no pick. */
+export function favoritePoints(contestantId: number, favoriteContestantIds: (number | null)[]): number {
+  return favoriteContestantIds.filter((id) => id === contestantId).length;
+}
+
+export function totalPoints(
+  contestantId: number,
+  votes: JudgeVote[],
+  favoriteContestantIds: (number | null)[],
+  audienceByContestant: Map<number, number>
+): number {
+  return (
+    yayPoints(contestantId, votes) +
+    favoritePoints(contestantId, favoriteContestantIds) +
+    (audienceByContestant.get(contestantId) ?? 0)
+  );
 }
 
 export function validateAudienceBonusPoints(points: number[]): string | null {
@@ -43,52 +58,61 @@ function findMax(items: { id: number; value: number }[]): TieResult {
 
 export function computeScores(
   contestantIds: number[],
-  judgePoints: Map<number, number>,
-  audienceBonus: Map<number, number>
+  votes: JudgeVote[],
+  favoriteContestantIds: (number | null)[],
+  audienceByContestant: Map<number, number>
 ): ContestantScore[] {
-  return contestantIds.map((contestantId) => {
-    const judgePointsForContestant = judgePoints.get(contestantId) ?? 0;
-    const audienceBonusForContestant = audienceBonus.get(contestantId) ?? 0;
-    return {
-      contestantId,
-      judgePoints: judgePointsForContestant,
-      audienceBonus: audienceBonusForContestant,
-      total: judgePointsForContestant + audienceBonusForContestant,
-    };
-  });
+  return contestantIds.map((contestantId) => ({
+    contestantId,
+    yayPoints: yayPoints(contestantId, votes),
+    favoritePoints: favoritePoints(contestantId, favoriteContestantIds),
+    audienceBonus: audienceByContestant.get(contestantId) ?? 0,
+    total: totalPoints(contestantId, votes, favoriteContestantIds, audienceByContestant),
+  }));
 }
 
 export function findOverallWinner(scores: ContestantScore[]): TieResult {
   return findMax(scores.map((s) => ({ id: s.contestantId, value: s.total })));
 }
 
-export type AudienceBonusResult = {
+/** A startup this close to the leader (in percentage points of all audience votes) counts as tied with it. */
+export const AUDIENCE_SPLIT_MARGIN_PCT = 2;
+
+export type AudiencePointsResult = {
+  pointsByContestant: Map<number, number>;
   needsRunoff: boolean;
-  leaders: number[];
-  bonusByContestant: Map<number, number>;
 };
 
-export function computeAudienceBonus(votes: Map<number, number>): AudienceBonusResult {
-  const bonusByContestant = new Map<number, number>();
-  for (const contestantId of votes.keys()) {
-    bonusByContestant.set(contestantId, 0);
-  }
-  if (votes.size === 0) {
-    return { needsRunoff: false, leaders: [], bonusByContestant };
-  }
+/**
+ * Audience points from per-contestant vote totals for one round.
+ * - Leader ahead of second by more than the margin: leader gets all 2.
+ * - Gap at or under the margin: top two get 1 each.
+ * - Three or more within the margin of the leader: nobody is awarded yet, needsRunoff is true.
+ * - No votes cast: nobody is awarded.
+ * Gaps are compared as integers (gap * 100 <= margin * total) so an exact 2 point gap never
+ * trips over floating point.
+ */
+export function audiencePoints(voteTotals: Map<number, number>): AudiencePointsResult {
+  const pointsByContestant = new Map<number, number>();
+  for (const id of voteTotals.keys()) pointsByContestant.set(id, 0);
 
-  const max = Math.max(...votes.values());
-  const leaders = [...votes.entries()].filter(([, count]) => count === max).map(([id]) => id);
+  const totalVotes = [...voteTotals.values()].reduce((sum, n) => sum + n, 0);
+  if (totalVotes <= 0) return { pointsByContestant, needsRunoff: false };
 
-  if (AUDIENCE_BONUS_TOTAL % leaders.length !== 0) {
-    return { needsRunoff: true, leaders, bonusByContestant };
-  }
+  const ranked = [...voteTotals.entries()].sort((a, b) => b[1] - a[1]);
+  const [leaderId, leaderVotes] = ranked[0];
+  const withinMargin = ranked.filter(
+    ([, count]) => (leaderVotes - count) * 100 <= AUDIENCE_SPLIT_MARGIN_PCT * totalVotes
+  );
 
-  const bonusPerLeader = AUDIENCE_BONUS_TOTAL / leaders.length;
-  for (const id of leaders) {
-    bonusByContestant.set(id, bonusPerLeader);
+  if (withinMargin.length >= 3) return { pointsByContestant, needsRunoff: true };
+  if (withinMargin.length === 2) {
+    pointsByContestant.set(withinMargin[0][0], AUDIENCE_BONUS_TOTAL / 2);
+    pointsByContestant.set(withinMargin[1][0], AUDIENCE_BONUS_TOTAL / 2);
+    return { pointsByContestant, needsRunoff: false };
   }
-  return { needsRunoff: false, leaders, bonusByContestant };
+  pointsByContestant.set(leaderId, AUDIENCE_BONUS_TOTAL);
+  return { pointsByContestant, needsRunoff: false };
 }
 
 export function applyRunoffWinner(contestantIds: number[], winnerId: number): Map<number, number> {

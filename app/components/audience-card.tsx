@@ -15,7 +15,7 @@ export function AudienceCard({
 
   return (
     <div
-      className={`flex flex-shrink-0 flex-col items-center justify-between gap-2 rounded-2xl px-3 py-4 text-center ${
+      className={`flex flex-shrink-0 flex-col items-center justify-between gap-1 rounded-2xl px-3 py-3 text-center ${
         hasBonus
           ? "audience-card-gold border-[3px] border-white bg-gold"
           : isDimmed
@@ -29,14 +29,14 @@ export function AudienceCard({
       }}
     >
       <span
-        className={`font-display uppercase tracking-[0.02em] ${hasBonus ? "text-navy" : "text-lavender"}`}
+        className={`font-display uppercase leading-none tracking-[0.02em] ${hasBonus ? "text-navy" : "text-lavender"}`}
         style={{ fontSize: "clamp(0.7rem, 3cqw, 1.1rem)" }}
       >
         {data.position}
       </span>
 
       <span
-        className={`line-clamp-2 font-display uppercase leading-[0.95] tracking-[0.01em] ${
+        className={`line-clamp-2 flex-shrink-0 font-display uppercase leading-[0.95] tracking-[0.01em] ${
           hasBonus ? "text-navy" : "text-white"
         }`}
         style={{ fontSize: `clamp(0.9rem, ${nameVw}cqw, 2rem)` }}
@@ -44,22 +44,29 @@ export function AudienceCard({
         {data.startupName}
       </span>
 
-      <div className="flex items-center gap-1.5" style={{ height: "clamp(16px, 6cqh, 32px)" }}>
+      <div className="flex flex-shrink-0 items-center gap-1.5" style={{ height: "clamp(14px, 5cqh, 28px)" }}>
         {Array.from({ length: Math.max(data.totalJudges, 1) }).map((_, i) => (
-          <GreenlightPennant key={i} earned={i < data.judgePoints} muted={hasBonus} />
+          <GreenlightPennant key={i} earned={i < data.yayPoints} muted={hasBonus} />
         ))}
       </div>
 
       <span
-        className={`font-display uppercase tracking-[0.02em] ${hasBonus ? "text-navy" : "text-ice"}`}
+        className={`font-display uppercase leading-none tracking-[0.02em] ${hasBonus ? "text-navy" : "text-ice"}`}
         style={{ fontSize: "clamp(0.6rem, 2.4cqw, 1rem)" }}
       >
-        {data.judgePoints} {data.judgePoints === 1 ? "Greenlight" : "Greenlights"}
+        {data.yayPoints} {data.yayPoints === 1 ? "Greenlight" : "Greenlights"}
+      </span>
+
+      <span
+        className={`font-display uppercase leading-none tracking-[0.02em] ${hasBonus ? "text-navy" : "text-gold"}`}
+        style={{ fontSize: "clamp(0.6rem, 2.4cqw, 1rem)" }}
+      >
+        {data.favoritePoints} {data.favoritePoints === 1 ? "Favorite" : "Favorites"}
       </span>
 
       {mode === "vote" && (
         <span
-          className="rounded-full border border-gold px-2 py-1 font-display uppercase tracking-[0.02em] text-gold"
+          className="rounded-full border border-gold px-2 py-1 font-display uppercase leading-none tracking-[0.02em] text-gold"
           style={{ fontSize: "clamp(0.55rem, 2cqw, 0.9rem)" }}
         >
           +{AUDIENCE_BONUS_TOTAL} up for grabs
@@ -70,7 +77,7 @@ export function AudienceCard({
         <>
           {hasBonus ? (
             <span
-              className={`rounded-full bg-navy font-display uppercase tracking-[0.02em] text-gold ${
+              className={`rounded-full bg-navy font-display uppercase leading-none tracking-[0.02em] text-gold ${
                 data.audienceBonus === 2 ? "px-3 py-1.5" : "px-2.5 py-1"
               }`}
               style={{
@@ -82,27 +89,27 @@ export function AudienceCard({
             </span>
           ) : (
             <span
-              className="rounded-full border border-line px-2 py-1 font-display uppercase tracking-[0.02em] text-ice"
+              className="rounded-full border border-line px-2 py-1 font-display uppercase leading-none tracking-[0.02em] text-ice"
               style={{ fontSize: "clamp(0.55rem, 2cqw, 0.9rem)" }}
             >
               +0
             </span>
           )}
 
-          <div className={`h-px w-3/4 ${hasBonus ? "bg-navy/30" : "bg-line"}`} />
-
-          <span
-            className={`font-display uppercase tracking-[0.02em] ${hasBonus ? "text-navy" : "text-lavender"}`}
-            style={{ fontSize: "clamp(0.55rem, 2cqw, 0.85rem)" }}
-          >
-            Total
-          </span>
-          <span
-            className={`font-display ${hasBonus ? "text-navy" : "text-ice"}`}
-            style={{ fontSize: "clamp(1.2rem, 5cqw, 2.5rem)" }}
-          >
-            {data.total}
-          </span>
+          <div className="flex items-baseline justify-center gap-2">
+            <span
+              className={`font-display uppercase leading-none tracking-[0.02em] ${hasBonus ? "text-navy" : "text-lavender"}`}
+              style={{ fontSize: "clamp(0.55rem, 2cqw, 0.85rem)" }}
+            >
+              Total
+            </span>
+            <span
+              className={`font-display ${hasBonus ? "text-navy" : "text-ice"}`}
+              style={{ fontSize: "clamp(1.2rem, 5cqw, 2.5rem)", lineHeight: 1 }}
+            >
+              {data.total}
+            </span>
+          </div>
         </>
       )}
     </div>

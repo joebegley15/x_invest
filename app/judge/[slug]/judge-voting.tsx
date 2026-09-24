@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { castVote, fetchJudgeState } from "./actions";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { castVote, fetchJudgeState, pickFavorite } from "./actions";
 import type { JudgeState } from "@/lib/judge-state";
 import { Starfield } from "@/app/components/starfield";
 import { ShowTitle } from "@/app/components/show-title";
@@ -16,10 +16,16 @@ const statusLine: Record<"neutral" | "red" | "green", string> = {
 export function JudgeVoting({ slug, initialState }: { slug: string; initialState: JudgeState }) {
   const [state, setState] = useState<JudgeState>(initialState);
   const [, startTransition] = useTransition();
+  // Skip a poll result that would land in the middle of a tap and flicker the selection back.
+  const pickInFlight = useRef(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchJudgeState(slug).then(setState).catch(() => {});
+      fetchJudgeState(slug)
+        .then((next) => {
+          if (!pickInFlight.current) setState(next);
+        })
+        .catch(() => {});
     }, 2000);
     return () => clearInterval(interval);
   }, [slug]);
@@ -38,6 +44,62 @@ export function JudgeVoting({ slug, initialState }: { slug: string; initialState
     return (
       <Shell showName={state.showName} judgeName={state.judgeName}>
         <p className="font-serif text-lg text-ice">Voting opens soon.</p>
+      </Shell>
+    );
+  }
+
+  if (state.phase === "favorites") {
+    const { judgeId, contestants, pickedContestantId, locked } = state;
+    const picked = contestants.find((c) => c.id === pickedContestantId) ?? null;
+
+    function handlePick(contestantId: number) {
+      if (locked) return;
+      const next = contestantId === pickedContestantId ? null : contestantId;
+      pickInFlight.current = true;
+      setState((prev) => (prev.phase === "favorites" ? { ...prev, pickedContestantId: next } : prev));
+      startTransition(async () => {
+        try {
+          setState(await pickFavorite(slug, judgeId, next));
+        } catch {
+          // A stale tap; the next poll will resync the buttons.
+        } finally {
+          pickInFlight.current = false;
+        }
+      });
+    }
+
+    return (
+      <Shell showName={state.showName} judgeName={state.judgeName}>
+        <Label className="text-sm">Pick your favorite</Label>
+        <p className="font-serif text-lg text-ice">
+          {picked ? `You picked ${picked.startupName}` : "No pick yet"}
+        </p>
+
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          {contestants.map((c) => {
+            const selected = c.id === pickedContestantId;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => handlePick(c.id)}
+                disabled={locked}
+                aria-pressed={selected}
+                aria-label={`Pick ${c.startupName} as your favorite`}
+                className={`flex min-h-[90px] w-full flex-col items-center justify-center gap-1 rounded-2xl border-[5px] px-4 py-3 transition-transform duration-150 active:scale-[0.98] motion-reduce:transition-none ${
+                  selected
+                    ? "border-white bg-vote-in text-navy opacity-100"
+                    : `border-line bg-panel text-white ${picked ? "opacity-45" : "opacity-100"}`
+                }`}
+              >
+                <span className="font-display text-5xl leading-none">{c.position}</span>
+                <span className="font-display text-lg uppercase tracking-[0.02em]">{c.startupName}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {locked && <p className="font-serif text-sm text-lavender">Your pick is locked.</p>}
       </Shell>
     );
   }

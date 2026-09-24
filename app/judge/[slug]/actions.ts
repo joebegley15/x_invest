@@ -57,3 +57,33 @@ export async function castVote(
 
   return getJudgeState(slug);
 }
+
+/** Sets this judge's favorite. Pass null to clear the pick. */
+export async function pickFavorite(
+  slug: string,
+  judgeId: number,
+  contestantId: number | null
+): Promise<JudgeState> {
+  await requireJudge();
+
+  if (!slug || !Number.isInteger(judgeId) || (contestantId !== null && !Number.isInteger(contestantId))) {
+    throw new Error("Invalid favorite request.");
+  }
+
+  const [judge] = await db.select().from(judges).where(eq(judges.id, judgeId));
+  if (!judge || judge.slug !== slug) throw new Error("Judge not found.");
+
+  const [show] = await db.select().from(shows).where(eq(shows.id, judge.showId));
+  if (!show || show.status !== "live" || !show.favoritesOpenedAt) {
+    throw new Error("Favorite voting is not open.");
+  }
+  if (show.favoritesRevealedAt) throw new Error("Favorites are locked.");
+
+  if (contestantId !== null) {
+    const [contestant] = await db.select().from(contestants).where(eq(contestants.id, contestantId));
+    if (!contestant || contestant.showId !== show.id) throw new Error("That startup is not in this show.");
+  }
+
+  await db.update(judges).set({ favoriteContestantId: contestantId }).where(eq(judges.id, judgeId));
+  return getJudgeState(slug);
+}
